@@ -1,0 +1,198 @@
+---
+const { sketchUrl, styleClass, containerId } = Astro.props;
+
+if (!sketchUrl || !containerId) {
+  console.error("P5Sketch: Las props 'sketchUrl' y 'containerId' son obligatorias.");
+}
+---
+
+<div class={styleClass} id={containerId}></div>
+
+<script define:vars={{ sketchUrlToLoad: sketchUrl, targetContainerId: containerId }}>
+  // Esta función se ejecutará para cada instancia del componente
+  (function() {
+    let p5Instance = null;
+    let intersectionObserver = null;
+
+    // Función para cargar la biblioteca p5.js si aún no está cargada
+    async function loadP5Library() {
+      // Si p5 ya está disponible
+      if (window.p5) {
+        console.log(`P5Sketch (${targetContainerId}): p5.js ya estaba disponible.`);
+        return;
+      }
+
+      // Si ya hay una carga en progreso, esperar a que termine
+      if (window.p5LoadingPromise) {
+        console.log(`P5Sketch (${targetContainerId}): Esperando carga de p5.js en progreso...`);
+        await window.p5LoadingPromise;
+        console.log(`P5Sketch (${targetContainerId}): p5.js cargado por otra instancia.`);
+        return;
+      }
+
+      // Primera instancia que inicia la carga
+      console.log(`P5Sketch (${targetContainerId}): Iniciando carga de p5.js desde CDN...`);
+      
+      window.p5LoadingPromise = new Promise((resolve, reject) => {
+        try {
+          const script = document.createElement('script');
+          script.src = 'https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.9.0/p5.min.js';
+          script.async = true;
+          
+          script.onload = () => {
+            console.log(`P5Sketch (${targetContainerId}): ✅ Biblioteca p5.js cargada desde CDN.`);
+            window.p5LoadingPromise = null; // Limpiar la promesa
+            resolve();
+          };
+          
+          script.onerror = (error) => {
+            console.error(`P5Sketch (${targetContainerId}): ❌ Error cargando p5.js:`, error);
+            window.p5LoadingPromise = null; // Limpiar la promesa
+            reject(error);
+          };
+          
+          document.head.appendChild(script);
+        } catch (error) {
+          console.error(`P5Sketch (${targetContainerId}): ❌ Fallo al crear script de p5.js:`, error);
+          window.p5LoadingPromise = null;
+          reject(error);
+        }
+      });
+
+      await window.p5LoadingPromise;
+    }
+
+    // Función para cargar el sketch dinámicamente
+    async function loadSketch(sketchPath) {
+      try {
+        // Convertir la ruta a una importación dinámica
+        const module = await import(sketchPath);
+        return module.default;
+      } catch (error) {
+        console.error(`P5Sketch (${targetContainerId}): Error cargando sketch desde "${sketchPath}":`, error);
+        throw error;
+      }
+    }
+
+    // Función para inicializar el sketch de p5.js
+    async function initializeSketch() {
+      const container = document.getElementById(targetContainerId);
+      if (!container) {
+        console.error(`P5Sketch: No se encontró el elemento contenedor con ID "${targetContainerId}".`);
+        return;
+      }
+
+      // Limpiar instancia y observador previos si existen
+      if (container.dataset.p5InstanceActive === 'true') {
+        const existingInstance = window[`p5Instance_${targetContainerId}`];
+        if (existingInstance && typeof existingInstance.remove === 'function') {
+          existingInstance.remove();
+        }
+        const existingObserver = window[`p5Observer_${targetContainerId}`];
+        if (existingObserver && typeof existingObserver.disconnect === 'function') {
+          existingObserver.disconnect();
+        }
+        delete container.dataset.p5InstanceActive;
+      }
+
+      try {
+        await loadP5Library();
+
+        // Cargar el sketch específico
+        const sketchFunction = await loadSketch(sketchUrlToLoad);
+
+        if (!sketchFunction || typeof sketchFunction !== 'function') {
+          console.error(`P5Sketch (${targetContainerId}): El sketch no es una función válida.`);
+          container.innerHTML = `<p style="color: red; padding: 10px; text-align: center;">Error: El sketch no tiene un formato válido.</p>`;
+          return;
+        }
+        
+        p5Instance = new window.p5(sketchFunction, container);
+        
+        container.dataset.p5InstanceActive = 'true';
+        window[`p5Instance_${targetContainerId}`] = p5Instance;
+
+        setupIntersectionObserver(container, p5Instance);
+      } catch (error) {
+        console.error(`P5Sketch (${targetContainerId}): Error cargando o inicializando el sketch:`, error);
+        if (container) {
+          container.innerHTML = `<p style="color: red; padding: 10px; text-align: center;">Error al cargar el sketch. Revisa la consola.</p>`;
+        }
+      }
+    }
+
+    // Configura el IntersectionObserver para pausar/reanudar el sketch
+    function setupIntersectionObserver(containerElement, instance) {
+      if (intersectionObserver) {
+        intersectionObserver.disconnect();
+      }
+
+      intersectionObserver = new IntersectionObserver(
+        ([entry]) => {
+          if (entry.isIntersecting) {
+            if (instance && typeof instance.loop === 'function') {
+              instance.loop();
+            }
+          } else {
+            if (instance && typeof instance.noLoop === 'function') {
+              instance.noLoop();
+            }
+          }
+        },
+        { threshold: 0.1 }
+      );
+
+      intersectionObserver.observe(containerElement);
+      window[`p5Observer_${targetContainerId}`] = intersectionObserver;
+    }
+
+    // Función de limpieza
+    function cleanup() {
+      const currentP5Instance = window[`p5Instance_${targetContainerId}`];
+      if (currentP5Instance && typeof currentP5Instance.remove === 'function') {
+        currentP5Instance.remove();
+        delete window[`p5Instance_${targetContainerId}`];
+      }
+      const currentObserver = window[`p5Observer_${targetContainerId}`];
+      if (currentObserver && typeof currentObserver.disconnect === 'function') {
+        currentObserver.disconnect();
+        delete window[`p5Observer_${targetContainerId}`];
+      }
+      const container = document.getElementById(targetContainerId);
+      if (container) {
+        delete container.dataset.p5InstanceActive;
+      }
+    }
+
+    // Inicializar el sketch cuando el DOM esté listo
+    if (document.readyState === 'loading') {
+      document.addEventListener('DOMContentLoaded', initializeSketch);
+    } else {
+      initializeSketch();
+    }
+
+    // Manejar View Transitions de Astro
+    document.addEventListener('astro:page-load', () => {
+      if (document.getElementById(targetContainerId)) {
+        initializeSketch();
+      } else {
+        cleanup();
+      }
+    });
+
+    document.addEventListener('astro:before-swap', () => {
+      cleanup();
+    });
+
+  })();
+</script>
+
+<style define:vars={{ styleClass }}>
+  /* Usar la clase dinámica pasada como prop */
+  :global(.[styleClass]) {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    margin: 1rem 0;
+  }
+</style>

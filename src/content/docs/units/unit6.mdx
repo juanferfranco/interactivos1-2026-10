@@ -1,0 +1,487 @@
+---
+title: Unidad 6
+unitId: unit6
+---
+
+import { Aside } from '@astrojs/starlight/components';
+
+
+## Introducción 📜
+
+Hasta ahora, has aprendido a conectar dispositivos físicos a tus aplicaciones 
+interactivas usando comunicación serial. En esta unidad, vamos a explorar cómo
+conectar dos aplicaciones que se ejecutan en tu navegador en tiempo real.
+
+## Set: ¿Qué aprenderás en esta unidad? 💡
+
+En esta unidad, descubrirás Node.js y Socket.IO, herramientas poderosas que nos 
+permitirán crear un "puente" de comunicación. Node.js actuará como un servidor 
+intermediario, y Socket.IO facilitará el envío y recepción de mensajes instantáneos 
+entre las aplicaciones cliente (sketches de p5.js). Empezaremos analizando un caso 
+de estudio funcional para entender la mecánica servidor-cliente y luego lo 
+modificarás para crear tu propia experiencia interactiva conectada. Aunque en esta 
+unidad ambas aplicaciones cliente correrán en tu computador, esto sienta las bases 
+para futuras conexiones entre diferentes dispositivos o computadores.
+
+**¿Qué aprenderás?**
+
+- Configurarás y ejecutarás un servidor básico usando Node.js, Express y Socket.IO.  
+- Implementarás una comunicación en tiempo real entre dos sketches de p5.js utilizando 
+Socket.IO a través de un servidor Node.js.  
+- Analizarás la arquitectura cliente-servidor y el flujo de datos en una aplicación 
+web en tiempo real.  
+- Partiendo de la infraestructura de comunicación propuesta por un caso de estudio existente, 
+crearás una nueva aplicación interactiva que utilice comunicación en red.
+
+### Actividad 01 
+
+#### Preparación del entorno y primer contacto
+
+:::note[🎯 Enunciado]
+Antes de sumergirnos en el código, vamos a preparar nuestro 
+entorno de desarrollo y ejecutar el caso de estudio base. Es crucial entender 
+cómo poner en marcha el sistema completo.
+:::
+
+:::tip[Recursos]
+Necesitarás tener [Node.js](https://nodejs.org/en) instalado en tu sistema. 
+Los computadores de la U ya lo tienen, pero si estás trabajando en tu computador personal tendrás 
+que instalarlo primero.
+
+Descarga o clona el código fuente del caso de estudio desde [este repositorio](https://github.com/juanferfranco/entangledTest-sfi1-2025-20)
+:::
+
+👣 **Pasos**:
+
+:::note[🔧 Configuración del entorno]
+- Abre una terminal o símbolo del sistema en tu computador.  
+- Navega (usando el comando cd) hasta la carpeta donde descargaste/clonaste el código fuente.  
+- Ejecuta el comando: 
+
+    ``` bash
+    npm install
+    ```  
+- Una vez que termine la instalación, ejecuta el comando: 
+    
+    ``` bash
+    npm start
+    ```  
+- Ten presente que el paso npm install solo es necesario la primera vez que trabajas con el proyecto.
+- Observa la salida en la terminal. Deberías ver un mensaje indicando que el servidor está escuchando.
+- Abre tu navegador web, te recomiendo usar Chrome o Edge.
+- En una ventana, escribe la dirección: http://localhost:3000/page1
+- En otra ventana del mismo navegador, escribe la dirección: http://localhost:3000/page2
+- Interactúa con las ventanas (muévelas si tu sistema operativo lo permite, observa los elementos visuales).
+:::
+
+:::note[🧐🧪✍️ Reporta en tu bitácora]
+
+- ¿Qué ocurrió en la terminal cuando ejecutaste npm install? 
+¿Cuál crees que es su propósito?  
+- ¿Qué mensaje específico apareció en la terminal después de 
+ejecutar npm start? ¿Qué indica este mensaje?  
+- Describe lo que ves inicialmente en page1 y page2 en tu navegador.
+- ¿Qué mensajes aparecieron en la terminal del servidor cuando abriste page1 y page2?
+- Describe qué sucede en ambas páginas del navegador cuando mueves una de las 
+ventanas. ¿Cambia algo visualmente? ¿Qué mensajes aparecen (si los hay) en la 
+consola del navegador (usualmente accesible con F12 -> Pestaña Consola) y en 
+la terminal del servidor?
+:::
+
+## Seek: Investigación 🔎
+
+### Actividad 02
+
+:::note[🎯 Enunciado]
+Antes de sumergirnos en el código específico de nuestro caso de estudio,
+vamos a hacer un viaje conceptual. 
+:::
+
+---
+
+**¿Qué es Internet?**
+
+Imagina Internet no como una "nube" etérea, sino como una **gigantesca red de carreteras y cables**
+conectando millones de lugares: bibliotecas, tiendas, oficinas, casas... y también unos lugares
+especiales llamados `Servidores`. Tu computador (o teléfono) es tu vehículo, conectado a
+estas carreteras.
+
+:::caution[🧐✍️ Reporta en tu bitácora]
+Piensa en cómo te conectas a Internet en casa o en la Universidad.
+¿Usas Wi-Fi? ¿Un cable de red? Eso es simplemente tu "rampa de acceso" a la gran red de
+carreteras. ¿Qué pasaría si esa rampa se corta? Anota tus ideas.
+:::
+
+---
+
+**Navegador y servidor**
+
+Tu **navegador web** (Chrome, Firefox, Safari, Edge...) es tu vehículo súper inteligente. No
+solo te lleva por las carreteras (Internet), sino que sabe cómo pedir cosas y, lo más
+importante, ¡Cómo mostrarte lo que recibe! Eres tú, el usuario, quien decide a
+dónde ir. Tú eres el **Cliente**.
+
+Un **Servidor** es como una biblioteca o un almacén gigante abierto 24/7, ubicado en algún
+punto de esa red de carreteras. Su trabajo principal es *"servir"* información o funcionalidad
+cuando un `Cliente` (como tu navegador) se la pide correctamente.
+
+> **La base:** el **modelo Cliente-Servidor** = el `Cliente` pide, el `Servidor` responde.
+
+:::caution[🧐✍️ Reporta en tu bitácora]
+¿Puedes identificar otros ejemplos de relaciones `Cliente-Servidor` en
+tu vida diaria (no necesariamente digitales)? Por ejemplo, al pedir comida en un restaurante.
+¿Quién es el cliente y quién el servidor? ¿Qué se pide y qué se entrega?
+:::
+
+---
+
+**¿Qué es una URL?**
+
+Para que tu Navegador sepa a qué `Servidor` específico ir dentro de esa inmensa red, necesita
+una dirección precisa. Esa dirección es la **URL** (Uniform Resource Locator).
+
+Desglosemos una URL típica: `http://www.ejemplo.com/pagina/index.html`
+
+*   **`http://`**
+    *   El **protocolo**. Son las reglas del idioma que usarán tu navegador y el servidor para hablar. ¡Volveremos a esto!
+*   **`www.ejemplo.com`**
+    *   El **nombre de dominio**. Es como el nombre del edificio o de la biblioteca. Detrás de escena, este nombre se traduce 
+    a una dirección numérica (la `dirección IP`) que sí indica la ubicación física en la red.
+*   **`/pagina/index.html`**
+    *   La **ruta específica** dentro de ese servidor. Es como pedir ir a la "sección de arte, Estante 3, Libro 5" dentro de 
+    la biblioteca. Indica el recurso exacto que quieres.
+
+:::caution[🧐✍️ Reporta en tu bitácora]
+Toma la URL de tu sitio web favorito. Intenta identificar el protocolo,
+el nombre de dominio y la ruta (si la hay). ¿Qué crees que pasa si solo escribes el nombre de
+dominio (ej. `www.google.com`) sin una ruta específica? ¿Qué "página por defecto" crees que
+te envía el servidor?
+:::
+
+---
+
+**Protocolo HTTP**
+
+Dijimos que `http` era el protocolo. ¿Pero qué significa eso? Recuerda las unidades anteriores
+donde usaste protocolos (`ASCII`, binario con `framing`) para que el micro:bit y p5.js se entendieran
+por el puerto serial. ¡Aquí es la misma idea, pero a gran escala!
+
+**HTTP (HyperText Transfer Protocol)** es el conjunto de reglas estándar que usan los Navegadores
+(`Clientes`) y los `Servidores` para comunicarse en la web. Es como un idioma formal:
+
+```text
+--- INICIO DE LA CONVERSACIÓN HTTP ---
+
+➡️  Navegador (Cliente) envía una Petición HTTP (HTTP Request):
+    "¡Hola servidor en www.ejemplo.com!
+     SOY un navegador Chrome.
+     POR FAVOR, ¿me puedes dar (método GET) el recurso que está en /pagina/index.html?"
+
+⬅️  Servidor responde con una Respuesta HTTP (HTTP Response):
+    "¡Entendido, Navegador!
+     AQUÍ TIENES (Código de estado 200 OK).
+     El archivo que pediste (index.html) es de tipo HTML (Content-Type).
+     Aquí están sus contenidos: <html>...</html>"
+
+--- FIN DE LA CONVERSACIÓN HTTP ---
+```
+
+:::caution[🧐✍️ Reporta en tu bitácora]
+Compara HTTP con los protocolos seriales que usaste.
+
+¿Qué similitudes encuentras?
+
+¿Qué diferencias clave ves?
+
+¿Por qué crees que HTTP necesita ser más complejo que un simple envío de bytes como hacías con el micro:bit?
+:::
+
+---
+
+**HTML, CSS y JavaScript**
+
+Cuando el servidor responde con éxito a una petición de una página web, normalmente no
+envía una sola cosa, sino un *"paquete"* con instrucciones para tu Navegador. Este paquete
+suele contener tres tipos principales de archivos:
+
+*   **HTML** (HyperText Markup Language):
+    *   **El esqueleto**, la estructura de la página.
+    *   Define *qué* elementos hay: títulos, párrafos, imágenes, botones, etc.
+    *   *Analogía:* el plano de una casa.
+*   **CSS** (Cascading Style Sheets):
+    *   **La decoración**, el estilo visual.
+    *   Define *cómo se ven* esos elementos: colores, fuentes, tamaños, posiciones.
+    *   *Analogía:* la pintura, los muebles y las cortinas de la casa.
+*   **JavaScript (JS)**:
+    *   **La interactividad**, la "magia" que hace que la página responda a tus acciones.
+    *   *Puede* cambiar el `HTML` y el `CSS` dinámicamente, reaccionar a clics, enviar datos, ¡Y mucho más!
+    *   *Analogía:* la electricidad, la plomería y los electrodomésticos que hacen la casa funcional y habitable.
+
+:::caution[🧐✍️ Reporta en tu bitácora]
+Piensa en una página web simple, como un formulario de login.
+*   ¿Qué parte crees que es `HTML` (ej. los campos de texto, el botón)?
+*   ¿Qué parte es `CSS` (ej. el color del botón, el tipo de letra)?
+*   ¿Qué parte es `JavaScript` (ej. la comprobación de si escribiste algo antes de enviar, el mensaje de "contraseña incorrecta" que aparece sin recargar la página)?
+:::
+
+---
+
+**¿Cómo se ejecuta JavaScript?**
+
+El Navegador recibe el `HTML`, lo lee y construye la estructura básica de la página (el **DOM** - Document Object Model). Luego aplica los estilos del `CSS`. Pero, 
+¿Cuándo y cómo entra en juego el `JavaScript`?
+
+Normalmente, el `HTML` incluye etiquetas `<script>` que le dicen al navegador: `"Oye, aquí hay código JavaScript, por favor, ejecútalo"`. Esto puede pasar:
+
+*   **Mientras se carga la página:** si el `<script>` está en medio del `HTML`, el navegador *pausa* la construcción, ejecuta el `JS` y luego sigue.
+*   **Después de cargar el HTML:** a menudo, los scripts se colocan al final del `<body>` o se marcan con atributos como `defer` o `async` para que se ejecuten 
+*después* de que la estructura principal (`DOM`) esté lista. ¡Esto es importante para que el `JS` pueda encontrar y manipular los elementos `HTML`!
+
+Una vez que el `JS` está "vivo", no se ejecuta necesariamente de arriba abajo y termina (como un script simple). En la web, el `JS` a menudo funciona de 
+forma **dirigida por eventos**.
+
+---
+
+**El Modelo de ejecución: imperativo vs basado en eventos**
+
+Has estado usando p5.js. Recuerda las funciones `setup()` (se ejecuta una vez) y `draw()` (se ejecuta en bucle constante, ~60 veces por segundo). Este es un modelo 
+bastante **imperativo**: tú le dices al programa qué hacer paso a paso, y `draw()` repite esos pasos continuamente.
+
+El `JavaScript` que veremos en el caso de estudio (y en mucha programación web moderna) es más **declarativo y basado en eventos**. En lugar de un bucle `draw()` constante, defines funciones y luego le dices al navegador:
+
+> "CUANDO el usuario haga clic en este botón, ENTONCES ejecuta `estaFuncion()`".
+>
+> "CUANDO llegue un mensaje del servidor con el nombre `getdata`, ENTONCES ejecuta `otraFuncion()`".
+>
+> "CUANDO la ventana cambie de tamaño, ENTONCES ejecuta `aquellaFuncion()`".
+
+El código no se ejecuta en un bucle predecible, sino que **reacciona a eventos** que ocurren. El navegador se encarga de detectar esos eventos y llamar 
+a las funciones que tú registraste (llamadas *event listeners* o *manejadores de eventos*).
+
+:::caution[🧐✍️ Reporta en tu bitácora]
+Compara el bucle `draw()` de p5.js con este modelo de "esperar a que algo pase y reaccionar".
+*   ¿Qué ventajas crees que tiene el modelo basado en eventos para una interfaz de usuario web?
+*   ¿Sería eficiente tener un bucle `draw()` redibujando toda la página 60 veces por segundo si nada ha cambiado?
+:::
+
+---
+
+**¿Qué es Node.js?**
+
+Hasta ahora (en el curso), `JavaScript` vivía solo dentro de tu Navegador. **Node.js** fue una idea revolucionaria que cambió eso. 
+¿Y si pudiéramos tomar el motor de JavaScript súper rápido de Google Chrome (llamado `V8`) y usarlo *fuera* del navegador, directamente en un `Servidor`?
+
+¡Eso es `Node.js`! Permite a los desarrolladores escribir el código del **lado del servidor** usando `JavaScript`, el mismo lenguaje que ya usan en el 
+**lado del cliente** (navegador). En nuestro caso de estudio, `server.js` es un script de `Node.js` que:
+
+*   Crea un servidor `HTTP` (como la biblioteca con la sección de historia de la que hablamos antes).
+*   Escucha peticiones de los navegadores (como la tuya pidiendo `/page1`).
+*   Envía los archivos `HTML`, `CSS` y `JS` necesarios.
+*   Y además, maneja la comunicación en tiempo real (¡Siguiente punto!).
+
+:::caution[🧐✍️ Reporta en tu bitácora]
+¿Por qué crees que podría ser útil usar `JavaScript` tanto en el cliente (navegador) como en el servidor? ¿Se te ocurre alguna ventaja para los desarrolladores?
+:::
+
+---
+
+**WebSockets y Socket.IO**
+
+El modelo `HTTP` normal de Petición/Respuesta es como *enviar correos electrónicos*: pides algo, esperas, recibes una respuesta. Funciona bien para 
+pedir páginas web, pero ¿Qué pasa si quieres **comunicación instantánea**, como un chat o ver la posición del cursor de otra persona en tiempo real? 
+Enviar un "correo" (`HTTP Request`) cada décima de segundo sería muy ineficiente.
+
+Aquí entran los **WebSockets**. Son como establecer una *línea telefónica directa y permanente* entre el Navegador (`Cliente`) y el `Servidor` 
+una vez que la conexión inicial se ha hecho. Una vez abierta, ambos pueden enviarse mensajes instantáneamente sin necesidad de nuevas peticiones `HTTP` formales.
+
+**Socket.IO** es una librería (tanto para `Node.js` en el servidor como para `JavaScript` en el navegador) que hace que usar `WebSockets` (y otras técnicas de 
+respaldo si `WebSockets` no está disponible) sea mucho más fácil. Nos da funciones simples como:
+
+*   `socket.on('nombreDelMensaje', funcionReceptora)`: para **escuchar** mensajes del otro lado.
+*   `socket.emit('nombreDelMensaje', datosAEnviar)`: para **enviar** mensajes al otro lado.
+
+:::caution[🧐✍️ Reporta en tu bitácora]
+Resume con tus propias palabras la diferencia fundamental entre una comunicación `HTTP` tradicional y una comunicación usando `WebSockets`/`Socket.IO`. ¿En 
+qué tipo de aplicaciones has visto o podrías imaginar que se usa esta comunicación en tiempo real?
+:::
+
+---
+
+### Actividad 03
+
+:::note[🎯 **Enunciado**]
+Analizaremos juntos el código del servidor [`server.js`](https://github.com/juanferfranco/entangledTest-sfi1-2025-20/blob/main/server.js) línea por línea.
+:::
+
+:::caution[🧐🧪✍️ Experimenta]
+
+- Detén el servidor si está corriendo.
+
+- Cambia la primera ruta de /page1 a /pagina_uno.
+
+- Inicia el servidor.
+
+- Intenta acceder a http://localhost:3000/page1. ¿Funciona?
+
+- Ahora intenta acceder a http://localhost:3000/pagina_uno. ¿Funciona?
+
+- ¿Qué te dice esto sobre cómo el servidor asocia URLs con respuestas? Restaura el código.
+:::
+
+
+:::caution[🧐🧪✍️ **Experimenta**]
+
+- Asegúrate de que el servidor esté corriendo (npm start).
+
+- Abre http://localhost:3000/page1 en una pestaña. Observa la terminal del servidor. ¿Qué mensaje ves? Anota el ID.
+
+- Abre http://localhost:3000/page2 en OTRA pestaña. Observa la terminal. ¿Qué mensaje ves? ¿El ID es diferente?
+
+- Cierra la pestaña de page1. Observa la terminal. ¿Qué mensaje ves? ¿Coincide el ID con el que anotaste?
+
+- Cierra la pestaña de page2. Observa la terminal.
+:::
+
+
+:::caution[🧐🧪✍️ **Experimenta**]
+
+- Inicia el servidor y abre page1 y page2.
+
+- Mueve la ventana de page1. Observa la terminal del servidor. ¿Qué evento se registra 
+(win1update o win2update)? ¿Qué datos (Data:) ves?
+
+- Mueve la ventana de page2. Observa la terminal. ¿Qué evento se registra ahora? ¿Qué datos ves?
+
+- Experimento clave: cambia socket.broadcast.emit('getdata', page1); por 
+socket.emit('getdata', page1); (quitando broadcast). Reinicia el servidor, abre ambas páginas. 
+Mueve page1. ¿Se actualiza la visualización en page2? ¿Por qué sí o por qué no? 
+(Pista: ¿A quién le envía el mensaje socket.emit?). Restaura el código a broadcast.emit.
+:::
+
+:::caution[🧐🧪✍️ Experimenta]
+
+- Detén el servidor.
+
+- Cambia const port = 3000; a const port = 3001;.
+
+- Inicia el servidor. ¿Qué mensaje ves en la consola? ¿En qué puerto dice que está escuchando?
+
+- Intenta abrir http://localhost:3000/page1. ¿Funciona?
+
+- Intenta abrir http://localhost:3001/page1. ¿Funciona?
+
+- ¿Qué aprendiste sobre la variable port y la función listen? Restaura el puerto a 3000.
+:::
+
+### Actividad 04
+
+#### Explorando los clientes (p5.js + Socket.IO)
+
+:::note[🎯 **Enunciado**] 
+Ahora nos enfocaremos en cómo uno de los clientes, [page2.js](https://github.com/juanferfranco/entangledTest-sfi1-2025-20/blob/main/views/page2.js), 
+interactúa con el servidor y visualiza la información. El código de page1.js es 
+muy similar, así que entender uno te ayudará a entender el otro.
+:::
+
+
+:::caution[🧐🧪✍️ **Experimenta**]
+
+- Abre page2.html en tu navegador (con el servidor corriendo).
+
+- Abre la consola de desarrollador (F12).
+
+- Detén el servidor Node.js (Ctrl+C).
+
+- Refresca la página page2.html. Observa la consola del navegador. ¿Ves algún error relacionado con la conexión? ¿Qué indica?
+
+- Vuelve a iniciar el servidor y refresca la página. ¿Desaparecen los errores?
+:::
+
+:::caution[🧐🧪✍️ **Experimenta**]
+
+- Comenta la línea socket.emit('win2update', currentPageData, socket.id); dentro del listener connect.
+
+- Reinicia el servidor y refresca page1.html y page2.html.
+
+- Mueve la ventana de page2 un poco para que envíe una actualización.
+
+- ¿Qué pasó? ¿Por qué?
+:::
+
+:::caution[🧐🧪✍️ **Experimenta**]
+
+- Abre ambas páginas (es posible que ya las tengas abiertas).
+
+- Mueve la ventana de page1. Observa la consola del navegador de page2. ¿Qué datos muestra?
+
+- Mueve la ventana de page2. Observa la consola de page1. ¿Qué pasa? ¿Por qué?
+:::
+
+
+:::caution[🧐🧪✍️ **Experimenta**]
+
+- Observa checkWindowPosition() en page2.js y modifica el código del if para comprobar 
+si el código dentreo de este se ejecuta.
+- Mueve cada ventana y observa las consolas.
+- ¿Qué puedes concluir y por qué?
+:::
+
+:::caution[🧐🧪✍️ **Experimenta** (¡Sé creativo!)]
+
+- Cambia el background(220) para que dependa de la distancia entre las ventanas. Puedes calcular la 
+magnitud del resultingVector usando let distancia = resultingVector.mag(); y luego usa map() para 
+convertir esa distancia a un valor de gris o color. background(map(distancia, 0, 1000, 255, 0)); 
+(ajusta el rango 0-1000 según sea necesario).
+
+- Inventa otra modificación creativa.
+:::
+
+## Apply: Aplicación 🛠
+
+### Actividad 05
+
+:::note[🎯 **Enunciado**] 
+Basado en la infraestructura de comunicación del caso de estudio vas a crear tu 
+propia aplicación interactiva en tiempo real. Diseño algo completamente nuevo usando la 
+misma tecnología de comunicación. ¡Sé creativo! Quiero insistirte con algo. No se trata de solo cambiar 
+el diseño o la apariencia de la aplicación. Se trata de crear algo nuevo, diferente y original.
+:::
+
+:::caution[🧐🧪✍️ En tu bitácora]
+1. Explica tu idea y realiza algunos bocetos.
+2. Implementa tu idea.
+3. Incluye todos los códigos (servidor y clientes) en tu bitácora.
+:::
+
+## Evidencias 🗂️
+
+<Aside type="note" title="RUBRICA!">
+* Recuerda que la bitácora se cierra 10 minutos antes de la segunda sesión de la semana 2 de la unidad. 
+* Si no realizas la autoevaluación tu nota será 0.
+* Si una actividad no está COMPLETA debes multiplicar la nota de esa actividad por el porcentaje 
+de avance que tengas.
+
+**Rúbrica de evaluación del proceso**
+
+5: realicé las 5 actividades completas y la autoevaluación.  
+3: realicé 4 actividades completas y la autoevaluación.  
+2: realicé 3 actividades completas y la autoevaluación.  
+1: realicé 2 actividades completas y la autoevaluación.  
+0.5: realicé 1 actividad completa y la autoevaluación.  
+0: no realicé ninguna actividad o no realicé la autoevaluación.  
+</Aside>
+
+<Aside type="danger" title="EVIDENCIAS EN BITÁCORA">
+
+1. Realiza las actividades propuestas en esta unidad y documenta todo el proceso en tu bitácora.  
+2. Realiza la autoevaluación indicando:
+    * Tu nota propuesta.
+    * La defensa de esa nota para cada actividad. 
+</Aside>
+
+
+
+## Reflect: Consolidación y metacognición 🤔
+
+Para esta fase de pediré que hagas un diagrama que explique cómo funciona tu aplicación y 
+cómo se comunican los diferentes componentes.

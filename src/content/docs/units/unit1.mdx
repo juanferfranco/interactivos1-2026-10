@@ -1,0 +1,627 @@
+---
+title: Unidad 1
+unitId: unit1
+---
+
+import TutorialViewer from '../../../components/TutorialViewer.astro';
+
+
+## Introducción 📜
+
+El objetivo de esta unidad será mostrarte el potencial de los sistemas físicos interactivos, 
+específicamente en el contexto del arte y el diseño generativos. Adicionalmente, busco 
+que puedas reflexionar sobre las posibilidades de lo que te mostraré en tu perfil profesional.  
+Aspiro que puedas responder a la pregunta: **¿Este curso para qué me sirve?**
+
+## Set: ¿Qué aprenderás en esta unidad? 💡
+
+Aprenderás acerca de las posibilidades que ofrecen los sistemas físicos interactivos. Te 
+mostraré ejemplos aplicados al arte y al diseño generativos. Además, reflexionarás sobre
+cómo estas prácticas pueden relacionarse con tu perfil profesional.
+
+### Actividad 01
+
+#### ¿Qué es un sistema físico interactivo?
+
+Te voy a proponer que hagamos un ejercicio juntos. Te voy a mostrar algunos videos y quiero que me digas qué es lo que ves.
+
+Moment Factory [Interactive | Ready to connect you](https://youtu.be/O_hruUGc_TM?si=HyLWuyhWyUgln9bJ)  
+[Interactive](https://momentfactory.com/reel/interactive-demo) de Moment Factory  
+[TDAxis](https://tdaxis.github.io/index.html), trabajo de grado en entretenimiento digital  
+[The VOID](https://youtu.be/cML814JD09g)  
+[Introduction of The "VOID Lounge"](https://youtu.be/lL-uM7Ldwwo?si=6jTI716e79SGEALw)  
+[AR + IoT](https://youtu.be/Fwikx1TOidE)  
+[Mario Kart](https://youtu.be/NKE39Tg9oQY)    
+[Proyecto Galia](https://youtu.be/4P5JcA0tB9w)  
+[AR Snapdragon Spaces](https://youtu.be/de0HgyUBBic)  
+[Haptic VR Gloves](https://youtu.be/h5WzF1ch3ww)  
+[iPad drawing into StreamDiffusion](https://www.youtube.com/shorts/WkOKERfxlpU)  
+[Real Time Tracking & Projection Mapping (Full ver.)](https://youtu.be/XkXrLZmnQ_M?si=h3TjigQ0lRPcGGHc)  
+
+:::caution[📤 Bitácora] 
+Luego de ver juntos los videos y conversar sobre ellos, define en tus propias palabras 
+* ¿Qué es un sistema físico interactivo?
+* ¿Cómo podrías aplicar lo que has visto en tu perfil profesional?
+:::
+
+
+### Actividad 02
+
+#### ¿Qué es el diseño y el arte generativos?
+
+Vamos a revisar juntos este material del diseñador Alemán 
+[Patrick Hübner](https://www.patrik-huebner.com/datadesigndictionary/generative-design/), que nos ayudará a entender 
+mejor el concepto de diseño generativo.
+
+Patrick Hübner propone una forma de diseño basada en un método muy simple: [input-process-output](https://www.patrik-huebner.com/method/).
+
+Otro ejemplo interesante que mezcla arte y sistemas físicos interactivos es el trabajo de 
+la artista generativa [Licia He](https://youtu.be/jmzVt61-mEE?si=xqMoaVi1U-E1LWpi).  
+
+:::caution[📤 Bitácora] 
+Luego de este ejercicio, define en tus propias palabras
+* ¿Qué es el diseño/arte generativo?
+* ¿Cómo podrías aplicar lo que has visto en tu perfil profesional?
+:::
+
+
+
+## Seek: Investigación 🔎
+
+Ahora que ya tienes una idea general de las posibilidades de los sistemas físicos interactivos 
+y una aplicación al arte y al diseño generativos, es momento de profundizar en el tema, deconstruir 
+algunos ejemplos y reflexionar sobre su relevancia en el contexto del entretenimiento digital.
+
+### Actividad 03
+
+#### Herramientas y tecnologías
+
+En este curso vas a explorar los conceptos usando principalmente dos herramientas: 
+[micro:bit](https://microbit.org/) y [p5.js](https://p5js.org/). En esta actividad vas a 
+conocer estas herramientas. Te voy a mostrar un ejemplo de un sistema físico interactivo
+implementado con estas herramientas. Luego, vas a intentar replicar este ejemplo.
+
+Ten presente que esta actividad es introductoria y no busca que domines estas herramientas. Vas a seguir 
+los siguientes pasos:
+
+1. Abre una versión actualizada de Google chrome o Microsogt edge.
+2. Abre en una pestaña este sitio [micro:bit editor](https://python.microbit.org/v/3).
+3. Copia en el editor el siguiente código:
+
+``` py
+from microbit import *
+
+uart.init(baudrate=115200)
+display.show(Image.BUTTERFLY)
+
+while True:
+    if button_a.is_pressed():
+        uart.write('A')
+        sleep(500)
+    if button_b.is_pressed():
+        uart.write('B')
+        sleep(500)
+    if accelerometer.was_gesture('shake'):
+        uart.write('C')
+        sleep(500)
+    if uart.any():
+        data = uart.read(1)
+        if data:
+            if data[0] == ord('h'):
+                display.show(Image.HEART)
+                sleep(500)
+                display.show(Image.HAPPY)
+```
+
+4. Conecta el micro:bit a un puerto USB del computador.
+5. Al lado del botón Send to micro:bit hay **tres puntos**. Selecciona Connect.
+6. Selecciona el puerto USB lógico asignado por el sistema operativo al micro:bit. En este
+   caso **mbed Serial Port**.
+7. Si no hay errores. Presiona **Send to micro:bit** y espera que aparezca una mariposa en 
+el display de este. Eso quiere decir que el programa anterior ya estará cargado en la memoria 
+del micro:bit.
+8. Ahora abre en otra pestaña el [editor de p5.js](https://p5js.org/).
+9. Observa que al lado del nombre del archivo: sketch.js hay una flecha. Si das click 
+podrás observar tres archivos: index.html, sketch.js, style.css.
+10. Abre el archivo index.html e incluye la siguiente línea antes de la tag **link**. Esta línea 
+permite incluir una biblioteca que facilita la comunicación USB serial entre el computador 
+y el micro:bit.
+
+``` js
+<script src="https://unpkg.com/@gohai/p5.webserial@^1/libraries/p5.webserial.js"></script>
+```
+11. Ahora en el archivo sketch.js copia el siguiente código:
+
+``` js
+
+let port;
+let connectBtn;
+
+function setup() {
+    createCanvas(400, 400);
+    background(220);
+    port = createSerial();
+    connectBtn = createButton('Connect to micro:bit');
+    connectBtn.position(80, 300);
+    connectBtn.mousePressed(connectBtnClick);
+    let sendBtn = createButton('Send Love');
+    sendBtn.position(220, 300);
+    sendBtn.mousePressed(sendBtnClick);
+    fill('white');
+    ellipse(width / 2, height / 2, 100, 100);
+}
+
+function draw() {
+
+    if(port.availableBytes() > 0){
+        let dataRx = port.read(1);
+        if(dataRx == 'A'){
+            fill('red');   
+        }
+        else if(dataRx == 'B'){
+            fill('yellow'); 
+        }
+        else{
+            fill('green'); 
+        }
+        background(220);
+        ellipse(width / 2, height / 2, 100, 100);
+        fill('black');
+        text(dataRx, width / 2, height / 2);
+    }    
+
+
+    if (!port.opened()) {
+        connectBtn.html('Connect to micro:bit');
+    } 
+    else {
+        connectBtn.html('Disconnect');
+    }
+}
+
+function connectBtnClick() {
+    if (!port.opened()) {
+        port.open('MicroPython', 115200);
+    } else {
+        port.close();
+    }
+}
+
+function sendBtnClick() {
+    port.write('h');
+}
+
+```
+
+12. Dale click a Play sketch.
+13. Dale ahora click a Connect to micro:bit
+14. Selecciona el puerto mbed Serial Port.
+15. Presiona los botones A y B del micro:bit.
+16. Sacude el micro:bit. ¿Qué pasa?
+17. Presiona el botón Send Love. ¿Qué pasa?
+
+:::caution[📤 Bitácora]
+Es tu turno ahora de reproducir el ejemplo anterior. La idea es que te familiarices con
+las herramientas y puedas replicar el ejemplo. Luego de hacer el ejercicio, responde la siguiente pregunta:
+
+En este sistemas físico interactivo identifica los inputs, outputs y el proceso.
+
+:::
+
+### Actividad 04
+
+#### Generando patrones visuales
+
+¿Te parece si exploramos juntos un poco más p5.js?
+
+
+Vamos a crear un programa en p5.js que genere patrones visuales aleatorios utilizando funciones matemáticas simples (ej. random(), sin(), cos()). Para 
+esta actividade no es necesario usar el micro:bit, solo p5.js.
+
+:::caution[📤 Bitácora]
+Crea tu propio programa en p5.js. En ti bitácora:
+
+* Escribe el enlace a tu programa en el editor de p5.js.
+* Copia el código de tu programa en la bitácora (recuerda insertarlo usando markdown y el lenguaje javascript).
+* Muestra una captura de pantalla del resultado de tu programa.
+:::
+
+
+
+## Apply: Aplicación 🛠
+
+Ahora vas a aplicar lo que has aprendido hasta ahora creando tu primer prototipo 
+de un sistema físico interactivo. Para ello, utilizarás p5.js y micro:bit.
+
+### Actividad 05
+
+#### Interacción básica con micro:bit
+
+Vamos a crear juntos un programa en p5.js que interactúe con un micro:bit. La idea es que 
+el programa en p5.js muestre un cuadrado en la pantalla que cambie de color al 
+presionar un botón del micro:bit y regrese a su color original al soltar el botón. 
+
+Este programa lo crearemos paso paso mediante un tutorial. Para navegar por 
+este tutorial debes ir dando click en el botón "Siguiente" o 
+"Anterior".
+
+<TutorialViewer>
+  <div data-slide-index="0">
+    <div data-slide-type="text">
+      #### Creación del programa del micro:bit
+        Vamos a crear un programa en el micro:bit que tenga un input (un botón) 
+        y un output (enviar un mensaje por serial) que indique que se ha presionado el botón.
+
+        Lo primero que debes hacer es abrir el editor de micro:bit. Luego, importa de la biblioteca 
+        microbit todas las funciones que necesitas para interactuar con el micro:bit.
+
+    </div>
+    <div data-slide-type="code">
+      ```py
+        from microbit import *
+      ```
+    </div>
+  </div>
+  
+  <div data-slide-index="1">
+    <div data-slide-type="text">
+      #### Lectura del botón
+        Ahora vamos a leer el estado del botón A del micro:bit. Para ello, utilizaremos un bucle 
+        que se ejecutará continuamente y verificará si el botón A ha sido presionado.
+
+        Observa que utilizamos `button_a.was_pressed()` para detectar si el botón ha sido presionado. 
+        También podrías usar `button_a.is_pressed()` si quieres saber si el botón está presionado en ese momento,
+        pero `was_pressed()` es más adecuado para detectar eventos únicos como un clic. Si usas `is_pressed()`,
+        el programa podría enviar múltiples mensajes si el botón se mantiene presionado. ¿Ves la diferencia?
+    </div>
+    <div data-slide-type="code">
+      ```py
+        from microbit import *
+
+        while True:
+            if button_a.was_pressed():
+      ```
+    </div>
+
+  </div>
+
+  <div data-slide-index="2">
+    <div data-slide-type="text">
+      #### Lectura del botón  y envío del mensaje
+        Ahora que sabemos cuándo se presiona el botón, vamos a enviar un mensaje por el puerto serial 
+        del micro:bit. Esto nos permitirá recibir el mensaje en p5.js.
+
+        Nota que debes inicializar la comunicación serial con `uart.init(baudrate=115200)` antes de enviar mensajes.
+        El baudrate es la velocidad de transmisión de datos, y 115200 es una velocidad comúnmente utilizada 
+        para la comunicación serial. Finalmente, utilizamos `uart.write('A')` para enviar el mensaje 'A' 
+        cuando se presiona el botón A.
+
+    </div>
+    <div data-slide-type="code">
+      ```py
+        from microbit import *
+
+        uart.init(baudrate=115200)
+
+        while True:
+            if button_a.was_pressed():
+                uart.write('A')  
+    ```
+    </div>
+
+  </div>
+
+  <div data-slide-index="3">
+    <div data-slide-type="text">
+      #### Aplicación en p5.js - Biblioteca de conexión serial
+
+        Lo primero que debes hacer es añadir la biblioteca que te permite conectar el micro:bit con p5.js.
+        Recuerda que esto lo haces en el archivo `index.html` de tu proyecto p5.js.
+
+    </div>
+    <div data-slide-type="code">
+        ```html
+        <script src="https://unpkg.com/@gohai/p5.webserial@^1/libraries/p5.webserial.js"></script>
+        ```
+    </div>
+
+  </div>
+
+  <div data-slide-index="4">
+    <div data-slide-type="text">
+      #### Aplicación en p5.js - Configuración inicial
+      
+      Vas a crear un par de variables globales (estas las creas por fuera de cualquier función). 
+      Al ser globales, podrás acceder a ellas desde cualquier parte del código. Estas variables 
+      te servirán para almacenar una referencia al objeto que te permitirá manipular el 
+      puerto serial y la otra variable te servirá para guardar una referencia al objeto que representa 
+      el botón con el cual podrías conectar y desconectar el micro:bit de la aplicación.
+
+      Observa la función connectBtnClick(). Esta función se ejecuta cuando el usuario hace 
+      click en el botón de conexión. A esto se le llama un "event handler" o manejador de eventos. 
+
+    </div>
+    <div data-slide-type="code">
+        ```js
+        let port;
+        let connectBtn;
+
+        function setup() {
+            createCanvas(400, 400);
+            background(220);
+            port = createSerial();
+            connectBtn = createButton('Connect to micro:bit');
+            connectBtn.position(80, 300);
+            connectBtn.mousePressed(connectBtnClick);
+        }
+
+        function draw() {
+        }
+
+        function connectBtnClick() {
+            if (!port.opened()) {
+                port.open('MicroPython', 115200);
+            } else {
+                port.close();
+            }
+        }
+
+        ```
+    </div>
+
+  </div>
+
+
+  <div data-slide-index="5">
+    <div data-slide-type="text">
+      #### Aplicación en p5.js - Dibujar en cada frame
+      
+      En draw() vas a dibujar un cuadrado en la pantalla todo el tiempo, pero 
+      tendrás que decidir en cada frame qué color debe tener. Entonces, antes 
+      de dibujarlo vas a leer el puerto serial y ver si hay algún mensaje
+      disponible. Si hay un mensaje, lo vas a leer (debes siempre consumir el mensaje
+      para que no se acumule) y cambiarás el color a rojo. Si no hay mensaje, el cuadrado
+      será de color verde. 
+
+      Antes de terminar el frame vas a actualizar el estado del botón para que refleje 
+      el estado de conexión del micro:bit.
+    </div>
+    <div data-slide-type="code">
+        ```js
+            let port;
+            let connectBtn;
+
+            function setup() {
+                createCanvas(400, 400);
+                background(220);
+                port = createSerial();
+                connectBtn = createButton("Connect to micro:bit");
+                connectBtn.position(80, 300);
+                connectBtn.mousePressed(connectBtnClick);
+            }
+
+            function draw() {
+                background(220);
+
+                if (port.availableBytes() > 0) {
+                    let dataRx = port.read(1);
+                    if (dataRx == "A") {
+                    fill("red");
+                    }
+                } else {
+                    fill("green");
+                }
+
+                rectMode(CENTER);
+                rect(width / 2, height / 2, 50, 50);
+
+                if (!port.opened()) {
+                    connectBtn.html("Connect to micro:bit");
+                } else {
+                    connectBtn.html("Disconnect");
+                }
+            }
+
+            function connectBtnClick() {
+                if (!port.opened()) {
+                    port.open("MicroPython", 115200);
+                } else {
+                    port.close();
+                }
+            }
+        ```
+    </div>
+
+  </div>
+
+  <div data-slide-index="6">
+    <div data-slide-type="text">
+      #### Aplicación en p5.js - Dibujar en cada frame
+
+      ¿Notaste que la aplicación no funcionó? ¿Qué crees que podría estar mal? 
+
+      ES MUY IMPORTANTE que reflexiones sobre esto antes de continuar. Piensa en 
+      esto. Cuando se presiona el botón A del micro:bit, se envía un mensaje 
+      por el puerto serial, este mensaje se lee en un frame. En ese frame se le 
+      cambia el color al cuadrado. Pero, al siguiente frame, se lee el puerto serial
+      y no hay mensajes disponibles, por lo que el cuadrado vuelve a ser verde.
+
+      Te voy a mostrar una solución al problema, pero es fundamental que la analices y entiendas
+      por qué funciona. Una vez entiendas el funcionamiento, podrías seguir incluyendo este 
+      código como punto de partida para tus programas que interactúan con el micro:bit. Pero 
+      ten presente que esto no es una receta, sino una solución a un problema específico. Cuando 
+      trabajas con sistemas físicos interactivos, es importante que entiendas cómo funcionan
+      para que puedas adaptarlos a tus necesidades.
+
+    </div>
+    <div data-slide-type="code">
+        
+        ```py
+        from microbit import *
+
+        uart.init(baudrate=115200)
+
+        while True:
+            
+            if button_a.is_pressed():
+                uart.write('A')
+            else:
+                uart.write('N')
+                
+            sleep(100)
+        ```
+
+
+        ```js
+          let port;
+          let connectBtn;
+          let connectionInitialized = false;
+
+          function setup() {
+            createCanvas(400, 400);
+            background(220);
+            port = createSerial();
+            connectBtn = createButton("Connect to micro:bit");
+            connectBtn.position(80, 300);
+            connectBtn.mousePressed(connectBtnClick);
+          }
+
+          function draw() {
+            background(220);
+            
+            if (port.opened() && !connectionInitialized) {
+              port.clear();
+              connectionInitialized = true; 
+            }
+
+            if (port.availableBytes() > 0) {
+              let dataRx = port.read(1);
+              if (dataRx == "A") {
+                fill("red");
+              } else if (dataRx == "N") {
+                fill("green");
+              }
+            }
+
+            rectMode(CENTER);
+            rect(width / 2, height / 2, 50, 50);
+
+            if (!port.opened()) {
+              connectBtn.html("Connect to micro:bit");
+            } else {
+              connectBtn.html("Disconnect");
+            }
+          }
+
+          function connectBtnClick() {
+            if (!port.opened()) {
+              port.open("MicroPython", 115200);
+              connectionInitialized = false;
+            } else {
+              port.close();
+            }
+          }
+
+        ```
+    </div>
+
+  </div>
+
+</TutorialViewer>
+
+
+:::caution[📤 Bitácora]
+En tu bitácora: explica cómo funciona el sistema físico interactivo que acabamos de crear.
+:::
+
+
+
+### Actividad 06
+
+#### Control de movimiento con micro:bit
+
+Crea un programa en p5.js que muestre un círculo en la pantalla. Utiliza 
+los botones A y B del micro:bit para controlar la posición en x del círculo en el canvas de p5.js. 
+
+:::caution[📤 Bitácora]
+En tu bitácora:
+* Escribe el enlace a tu programa en el editor de p5.js.
+* Copia el código de tu programa en la bitácora (recuerda insertarlo usando markdown y el lenguaje javascript).
+* Copia el código del micro:bit en la bitácora (recuerda insertarlo usando markdown y el lenguaje python).
+:::
+
+
+## Reflect: Consolidación y metacognición 🤔
+
+Cerramos la unidad con una reflexión sobre lo aprendido y cómo se relaciona con tus metas
+personales y profesionales.
+
+**Tiempo para la actividad 07: 35 minutos.**  
+**Tiempo para la actividad 08: 35 minutos.**  
+**Tiempo para la actividad 09: 15 minutos.**
+
+### Actividad 07
+
+####  Autoevaluación
+
+**Mirando hacia adentro: autoevaluación de conceptos y conexiones**
+
+El propósito de esta actividad es que recuperes de tu memoria los conceptos fundamentales de la unidad y reflexiones sobre cómo conectan con tus intereses profesionales. Este esfuerzo de recordar sin consultar tus notas (conocido como *retrieval practice*) es una de las formas más efectivas de construir conocimiento duradero.
+
+:::caution[📤 Bitácora]
+
+En tu bitácora. Sin mirar tus apuntes, los tutoriales o los sketches previos, responde a las siguientes preguntas con tus propias palabras. El objetivo es el proceso de recordar, no la perfección.
+
+**Parte 1: recuperación de conocimiento (Retrieval Practice)**
+
+1.  Basándote en los ejemplos que vimos de sistemas físicos interactivos al iniciar el curso, 
+describe las tres características que definen a un **sistema físico interactivo**.
+2.  Explica el modelo **input-process-output** de Patrick Hübner usando como ejemplo el sistema que construiste con micro:bit y p5.js en la Actividad 06. ¿Cuál fue el input, cuál fue el proceso y cuál fue el output?
+3.  ¿Cuál es la función de la línea `uart.write('A')` en el código del micro:bit y qué función en p5.js se encarga de "escuchar" ese mensaje?
+4.  ¿Cuál es la diferencia fundamental entre el arte/diseño tradicional y el **arte/diseño generativo**?
+5.  Imagina que quieres que un círculo en p5.js cambie a un color aleatorio cada vez que sacudes el micro:bit. Describe qué tendrías que programar en el micro:bit y qué tendrías que programar en p5.js para lograrlo.
+
+**Parte 2: reflexión sobre tu proceso (Metacognición)**
+
+1.  ¿Qué fue más desafiante para ti en esta unidad: la parte conceptual (entender qué es un sistema físico interactivo) o la parte técnica (hacer que el micro:bit y p5.js se comunicaran)? ¿Por qué?
+2.  Describe el momento "¡Aha!" que tuviste cuando lograste que una acción en el micro:bit (presionar un botón, sacudirlo) tuviera un efecto visible en el canvas de p5.js por primera vez. ¿Qué fue lo que entendiste en ese instante?
+3.  Al inicio de la unidad te pregunté: "¿Este curso para qué me sirve?". Después de experimentar y construir tu primer prototipo, ¿Cómo ha cambiado o se ha vuelto más concreta tu respuesta a esa pregunta?
+4.  El tutorial de la Actividad 05 te llevó paso a paso. ¿Cómo te sentiste con ese método de aprendizaje? ¿Te dio seguridad o preferirías haberlo intentado por tu cuenta desde el principio?
+:::
+
+
+### Actividad 08
+
+####  Coevaluación
+
+
+**Aprendiendo juntos: coevaluación constructiva**
+
+Ahora es el momento de analizar el trabajo de un compañero. El objetivo es dar una retroalimentación constructiva sobre el prototipo final de la unidad, una habilidad esencial para trabajar en equipos creativos y técnicos.
+
+:::caution[📤 Bitácora]
+
+1.  Encuentra un compañero de trabajo.
+2.  Intercambien las URLs de sus bitácoras de aprendizaje.
+3.  Concéntrate en la **Actividad 06: control de movimiento con micro:bit** de tu compañero. Lee su código (Python y JavaScript).
+4. Tu compañero resolvió el problema de manera diferente a ti, qué hizo diferente, qué aprendiste de su solución. En tu bitácora documenta lo anterior y escribe, como si le estuvieras explicando, lo que tú hiciste y por qué es diferente a lo que hizo tu compañero.
+:::
+
+
+### Actividad 09
+
+#### Feedback
+
+**Mejorando la experiencia: tu feedback es clave**
+
+Mi rol es guiarte en este aprendizaje, y tu perspectiva es fundamental para que pueda hacerlo mejor. Por favor, comparte tus pensamientos honestos para que pueda ajustar y enriquecer las próximas unidades del curso.
+
+:::caution[📤 Bitácora]
+Responde a las siguientes preguntas. Tu honestidad es el recurso más valioso para la mejora del curso.
+
+1.  **Continuar**: ¿Qué actividad, video o ejemplo de esta unidad te resultó más inspirador o te ayudó más a entender el potencial de los sistemas físicos interactivos?
+2.  **Dejar de hacer**: ¿Hubo alguna parte que te pareció demasiado abstracta, muy rápida o confusa? ¿Hay algo que crees que podríamos cambiar para que sea más claro?
+3.  **Empezar a hacer**: ¿Qué te genera más curiosidad ahora? ¿Te gustaría explorar más sensores del micro:bit (luz, temperatura), crear visualizaciones más complejas en p5.js o ver más ejemplos de proyectos artísticos?
+4.  **Balance inspiración vs. técnica**: ¿Cómo sentiste el equilibrio entre ver los videos inspiradores de la Actividad 01 y la parte técnica de conectar las herramientas en las actividades 03-06?
+5.  **Comentario adicional**: ¿Hay algo más que quieras compartir sobre tu experiencia en esta unidad introductoria?
+:::

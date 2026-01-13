@@ -1,0 +1,26 @@
+{
+  "name": "",
+  "type": "module",
+  "version": "0.0.1",
+  "scripts": {
+    "dev": "astro dev",
+    "start": "astro dev",
+    "build": "astro build",
+    "preview": "astro preview",
+    "astro": "astro"
+  },
+  "dependencies": {
+    "@astrojs/starlight": "^0.36.0",
+    "@babel/runtime": "^7.26.10",
+    "astro": "^5.13.9",
+    "esbuild": ">=0.25.0",
+    "p5": "^1.11.7",
+    "rehype-mathjax": "^6.0.0",
+    "remark-math": "^6.0.0",
+    "sharp": "^0.32.5"
+  },
+  "devDependencies": {
+    "@types/p5": "^1.7.6",
+    "esbuild": ">=0.25.0"
+  }
+}

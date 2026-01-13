@@ -1,0 +1,77 @@
+/* src/styles/custom.css */
+
+/*
+  Para hacer el panel de contenido más ancho:
+  Puedes usar unidades relativas (ch, rem), píxeles (px)
+  o incluso las variables de ancho de pantalla de Starlight.
+*/
+
+:root {
+  /* Opción 1: Usa un valor fijo (ej. 1000px, 1200px) */
+  /*--sl-content-width: 1000px;*/
+  /* Si quieres que el texto dentro también sea más ancho (opcional) */
+  /*--sl-content-width-prose: 90ch; */ /* 'ch' es el ancho de un carácter '0' */
+
+  /* Opción 2: Usa un ancho de pantalla de Starlight (ej. xl, 2xl) */
+  /* Reemplaza el valor de --sl-content-width por uno de estos: */
+  /* --sl-content-width: var(--sl-screen-xl);  // Para un ancho 'xl' de Tailwind */
+  /* --sl-content-width: var(--sl-screen-2xl); // Para un ancho '2xl' de Tailwind */
+
+  /* Opción 3: Un ancho casi completo (cuidado con la legibilidad) */
+  /* --sl-content-width: 80%;*/ 
+  --sl-content-width: 80%;
+}
+
+
+/* Si las variables CSS no son suficientes o si deseas más control,
+   puedes inspeccionar el elemento y forzar el ancho usando !important.
+   Esto es menos recomendado que las variables, pero a veces necesario. */
+
+/*
+.sl-max-w-prose {
+    max-width: 90ch !important;
+}
+
+.main-content-area { /* Tendrías que encontrar la clase específica */
+/*    max-width: 1200px !important;
+}
+*/
+
+.p5-container-colorWheel {
+  display: flex;
+  justify-content: flex-start; /* Alinear a la izquierda para que los sliders quepan */
+  align-items: center;
+  margin: 1rem auto;
+  width: 700px;              /* Ancho fijo suficiente */
+  height: 580px;             /* Altura fija */
+  position: relative;
+  border: 1px solid #444;
+  border-radius: 8px;
+  padding: 15px;
+  background-color: #1a1a1a; /* Fondo oscuro para que se vea mejor */
+  overflow: visible;          /* Permitir que los sliders sean visibles */
+}
+
+.p5-container-interpolation {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  margin: 1rem auto;
+  width: 600px;
+  height: 600px;
+  position: relative;
+  border: 1px solid #444;
+  border-radius: 8px;
+  padding: 15px;
+  background-color: #1a1a1a;
+  overflow: visible;
+}
+
+.p5-container-introSC {
+      width: 800px;
+      height: 800px;
+      margin: 2rem auto;
+      border: 1px solid #ccc;
+      border-radius: 8px;
+      overflow: hidden;
+    }

@@ -1,0 +1,52 @@
+---
+import { Tabs, TabItem } from '@astrojs/starlight/components';
+import { s } from '@astrojs/starlight/expressive-code/hast';
+
+// Destructure props with default values
+const { id = '', unit = ''} = Astro.props;
+let activityContent
+let hasError = false;
+
+try {
+  // Intentamos cargar primero como .mdx, luego como .md
+  try {
+    activityContent = await import(`../content/activities/${unit}/${id}/activity.mdx`);
+  } catch {
+    activityContent = await import(`../content/activities/${unit}/${id}/activity.md`);
+  }
+} catch (error) {
+  console.error(`Error importing activity files for unit: ${unit}, id: ${id}:`);
+  hasError = true;
+}
+---
+
+{hasError ? (
+  <div class="activity-error">
+    <p>⚠️ Esta actividad aún no está definida</p>
+    <p class="error-details">Archivos faltantes en: <code>content/activities/{unit}/{id}/</code></p>
+  </div>
+) : (
+<section class="activity">
+  <div>
+    {activityContent && (<activityContent.Content />)}
+  </div>
+</section>
+)}
+
+<style>
+  .activity-error {
+    padding: 1rem;
+    border: 2px dashed var(--sl-color-red);
+    border-radius: 0.5rem;
+    margin: 1rem 0;
+  }
+  .error-details {
+    font-size: 0.9em;
+    color: var(--sl-color-gray-5);
+  }
+  .error-details code {
+    background: var(--sl-color-gray-1);
+    padding: 0.2em 0.4em;
+    border-radius: 0.25rem;
+  }
+</style>
