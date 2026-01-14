@@ -4,6 +4,7 @@ unitId: intro
 ---
 import { Aside } from '@astrojs/starlight/components';
 import { Steps } from '@astrojs/starlight/components';
+import { Card, CardGrid } from '@astrojs/starlight/components';
 
 ## Carta descriptiva 📜
 
@@ -14,21 +15,23 @@ Te voy a mostrar aquí los puntos más importantes de ese documento.
 
 El objeto de este curso es aprender las técnicas de programación y 
 comunicación que permitan a una aplicación interactiva intercambiar 
-información con un sistema de cómputo externo con la capacidad de leer 
-y/o modificar el mundo físico. Algunos de los conceptos que se explorarán 
-serán las máquinas de estado, los protocolos de comunicación ASCII y 
-binarios, el modelo de comunicación cliente-servidor, modelo de comunicación 
-por eventos, las comunicaciones seriales, la lectura de información 
-del mundo físico, el envío de información hacia el mundo físico.
+información con un sistema de cómputo externo que puede leer 
+y/o modificar el mundo físico. Al sumergirnos en el estudio de este 
+tipo de sistemas, abordaremos conceptos como las máquinas de estado, 
+los protocolos de comunicación ASCII y binarios, el modelo de comunicación 
+cliente-servidor, modelo de comunicación por eventos, las comunicaciones 
+seriales, la lectura de información del mundo físico, el envío de 
+información hacia el mundo físico.
 
 ## ¿Para qué sirve este curso? 🎯
 
 Se espera que al finalizar el curso seas capaz de construir aplicaciones 
-interactivas que lean y/o modifiquen el mundo físico. Para este fin, se 
-propondrán problemas donde sea necesario intercambiar información entre 
-una aplicación interactiva y un sistema de cómputo externo.
+que INTEGREN sistemas de cómputo interactivos de tiempo real 
+con sistemas de cómputo con capacidades de lectura y modificación del mundo físico.
 
 ## Resultado de aprendizaje general 🏆
+
+
 
 Soluciono problemas de interacción mediante la integración de contenidos 
 digitales y software de acuerdo con un diseño previo, para la implementación 
@@ -42,24 +45,48 @@ el contexto.**
 
 ### Resultado de aprendizaje específico
 
+<Aside type="tip" title="Lo que debes ser capaz de hacer al finalizar el curso">
+
 **Integro dispositivos de entrada-salida con sistemas de cómputo para 
 la creación de sistemas intermediados por el entretenimiento digital 
 según los requisitos definidos.** El nivel al que se espera que llegues 
 es al nivel resolutivo.
+</Aside>
 
 ## Estructura y metodología del curso 🏗️
 
 El curso está dividido en 8 experiencias de aprendizaje que se desarrollarán 
 en 16 semanas:
 
-**Unidad 1:** ¿Este curso para qué?  
-**Unidad 2:** computadores embebidos  
-**Unidad 3:** creando arte con p5.js  
-**Unidad 4:** conectando mundos  
-**Unidad 5:** protocolos de comunicación  
-**Unidad 6:** el puente entre dispositivos  
-**Unidad 7:** comunicación interactiva  
-**Unidad 8:** todos juntos y en tiempo real  
+
+
+
+<CardGrid>
+  <Card title="Unidad 1" icon="information">
+    ¿Este curso para qué?
+  </Card>
+  <Card title="Unidad 2" icon="seti:platformio">
+    computadores embebidos
+  </Card>
+    <Card title="Unidad 3" icon="codePen">
+        creando arte con p5.js
+    </Card>
+    <Card title="Unidad 4" icon="external">
+        conectando mundos 
+    </Card>
+    <Card title="Unidad 5" icon="random">
+        protocolos de comunicación
+    </Card>
+    <Card title="Unidad 6" icon="node">
+        el puente entre dispositivos
+    </Card>
+    <Card title="Unidad 7" icon="comment">
+        comunicación interactiva
+    </Card>
+    <Card title="Unidad 8" icon="rocket">
+        todos juntos y en tiempo real
+    </Card>
+</CardGrid>
 
 En este curso vas a aprender haciendo, pensando y compartiendo. Cada unidad dura dos semanas y 
 se divide en cuatro fases: set, seek, apply y reflect. En la primera semana te enfocarás 

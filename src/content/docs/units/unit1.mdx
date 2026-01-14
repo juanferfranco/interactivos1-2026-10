@@ -4,14 +4,60 @@ unitId: unit1
 ---
 
 import TutorialViewer from '../../../components/TutorialViewer.astro';
+import { Aside } from '@astrojs/starlight/components';
 
 
 ## Introducción 📜
 
-El objetivo de esta unidad será mostrarte el potencial de los sistemas físicos interactivos, 
-específicamente en el contexto del arte y el diseño generativos. Adicionalmente, busco 
-que puedas reflexionar sobre las posibilidades de lo que te mostraré en tu perfil profesional.  
-Aspiro que puedas responder a la pregunta: **¿Este curso para qué me sirve?**
+El objetivo de esta unidad será mostrarte el potencial de los sistemas 
+físicos interactivos. En esta unidad voy a mostrarte un panorama introductorio 
+de estos en el contexto del arte y el diseño generativos. Adicionalmente, 
+me gustaría que aprovecharas esta unidad para reflexionar sobre las posibilidades 
+de lo que te mostraré en tu perfil profesional. Aspiro que puedas responder a la pregunta: 
+**¿Este curso a qué podría aportar a mi perfil profesional?**
+
+## Rúbrica de evaluación de la unidad 📝
+
+:::note[Transparencia]
+Esta rúbrica se socializa antes de la sustentación. La sustentación se 
+basa en lo presentado en la aplicación y lo documentado en la bitácora.
+:::
+
+### Requisito de salida (condición necesaria)
+
+:::caution[Para poder cerrar la evaluación y registrar la nota]
+La **bitácora de reflexión** debe estar diligenciada antes de terminar 
+la sesión y debe ser enseñada al profesor antes de abandonar el aula.
+:::
+
+---
+
+### Rúbrica analítica
+
+:::tip[Evidencias evaluadas]
+
+1) Funcionamiento de la aplicación + documentación en bitácora.
+2) Sustentación a partir de la app y la bitácora
+
+:::
+
+| Criterio (peso) | Cumple plenamente (5.0) | Se cumple medianamente (4.0)| Problemas importantes (3.0)| Falta comprensión básica (2.0) | No hay evidencia (0.0)
+|---|---|---|---|---|---|
+| **1. Aplicación + bitácora (60%)** | La app se ejecuta sin fallos en el entorno acordado. Evidencia completa y verificable en bitácora. Todo consistente con lo mostrado en la demo. | La app funciona y cumple lo esencial. La bitácora permite verificar, pero hay **1–2 vacíos menores**| La app funciona parcialmente o depende de condiciones no declaradas. Bitácora con **vacíos importantes** o incompleta. | La app no corre o no demuestra lo requerido. La bitácora no permite verificación de la app.| No se entregaron evidencias o no se puede acceder a ellas |
+|Evaluación||||||
+| **2. Sustentación (40%)** | Responde a las preguntas con precisión, conectando: **(a) lo que se ve**, **(b) cómo está hecho**, y **(c) por qué**. Usa su bitácora para justificar decisiones. Reconoce límites/errores y propone cómo probar/mejorar. | Respuestas correctas pero con **imprecisiones menores** o justificación superficial. Usa parcialmente la bitácora para sustentar. | Responde solo “qué hizo” pero le cuesta explicar “cómo” o “por qué”. Necesita guía para conectar con su propia evidencia/bitácora. | No logra responder de forma coherente o responde sin relación con lo presentado/documentado. Evidencia falta de comprensión básica del trabajo entregado. | No se entregaron evidencias o no se puede acceder a ellas |
+|Evaluación||||||
+---
+
+:::tip[Cálculo de la nota]
+
+$$
+Nota = C_1*0.6  + C_2*0.4
+$$
+
+:::
+
+---
 
 ## Set: ¿Qué aprenderás en esta unidad? 💡
 
@@ -30,11 +76,20 @@ quiero que me digas qué es lo que ves.
 * [Moment Factory youtube channel](https://www.youtube.com/@MomentFactory/videos)
 * [Proyecto IDED: TDAxis](https://tdaxis.github.io/index.html), trabajo de grado 
 en entretenimiento digital  
+* Location based VR: [The VOID](https://youtu.be/cML814JD09g?si=FnrXVIiNgTk9YMhy)
 * Location based VR: [sandboxvr](https://sandboxvr.com/), [The VOID](https://youtu.be/cML814JD09g)  
 * [Mario Kart](https://youtu.be/NKE39Tg9oQY)    
 * [Haptic VR Gloves](https://youtu.be/h5WzF1ch3ww)  
 * [iPad drawing into StreamDiffusion](https://www.youtube.com/shorts/WkOKERfxlpU)  
 * [Real Time Tracking & Projection Mapping (Full ver.)](https://youtu.be/XkXrLZmnQ_M?si=h3TjigQ0lRPcGGHc)  
+* [Excurio: immersive expedition](https://www.excurio.com/en/).
+* [Profundiza en LBVR](https://www.youtube.com/live/O1mQRC3jjQ4?si=lEg42OTC80M4rzDU)
+* [Lugares de memoria](https://drive.google.com/file/d/1sU6hnB91KABfIkzb8BxrmD-1jl8pwhHu/view?usp=sharing), 
+[Captura: pasajes de memoria](https://youtu.be/okB18ZhJNCw?si=l_sfnt8pX6KgBlo8)
+* Real time video world models: [Daydream AI](https://www.youtube.com/@daydreamliveai/videos)
+* Artista Colombiano, Juan Franco: [Becoming](https://app.daydream.live/creators/juanelfranco/becoming), 
+[Demo](https://youtu.be/oxPaZFRve9w?si=ZdLBM7EL9fUZL8YN)
+* UPB Emanuel Quintero Castaño: [Proyección Full dome para planetario](https://drive.google.com/file/d/1DotmXIoW5441XgMl0X89DvlF_6u9MlLB/view?usp=sharing)
 
 :::caution[📤 Bitácora] 
 Luego de ver juntos los videos y conversar sobre ellos, define en tus propias palabras 
@@ -42,27 +97,22 @@ Luego de ver juntos los videos y conversar sobre ellos, define en tus propias pa
 * ¿Cómo podrías aplicar lo que has visto en tu perfil profesional?
 :::
 
-
 ### Actividad 02
 
 #### ¿Qué es el diseño y el arte generativos?
 
 Vamos a revisar juntos este material del diseñador Alemán 
-[Patrick Hübner](https://www.patrik-huebner.com/datadesigndictionary/generative-design/), que nos ayudará a entender 
-mejor el concepto de diseño generativo.
+[Patrick Hübner](https://www.patrik-huebner.com/datadesigndictionary/generative-design/), 
+que nos ayudará a entender mejor el concepto de diseño generativo.
 
-Patrick Hübner propone una forma de diseño basada en un método muy simple: [input-process-output](https://www.patrik-huebner.com/method/).
-
-Otro ejemplo interesante que mezcla arte y sistemas físicos interactivos es el trabajo de 
-la artista generativa [Licia He](https://youtu.be/jmzVt61-mEE?si=xqMoaVi1U-E1LWpi).  
+Patrick Hübner propone una forma de diseño basada en un método muy simple: 
+[input-process-output](https://www.patrik-huebner.com/method/).
 
 :::caution[📤 Bitácora] 
 Luego de este ejercicio, define en tus propias palabras
 * ¿Qué es el diseño/arte generativo?
 * ¿Cómo podrías aplicar lo que has visto en tu perfil profesional?
 :::
-
-
 
 ## Seek: Investigación 🔎
 
@@ -74,13 +124,17 @@ algunos ejemplos y reflexionar sobre su relevancia en el contexto del entretenim
 
 #### Herramientas y tecnologías
 
-En este curso vas a explorar los conceptos usando principalmente dos herramientas: 
-[micro:bit](https://microbit.org/) y [p5.js](https://p5js.org/). En esta actividad vas a 
-conocer estas herramientas. Te voy a mostrar un ejemplo de un sistema físico interactivo
-implementado con estas herramientas. Luego, vas a intentar replicar este ejemplo.
+En las actividades anteriores exploramos los conceptos. En esta actividad vamos 
+a introducirnos en algunas herramientas que te permitirán prototipar un sistema 
+físico interactivo básico.
 
-Ten presente que esta actividad es introductoria y no busca que domines estas herramientas. Vas a seguir 
-los siguientes pasos:
+Usaremos dos herramientas: [micro:bit](https://microbit.org/) y [p5.js](https://p5js.org/). 
+En esta actividad vas a conocer estas herramientas. Te voy a mostrar un ejemplo de 
+un sistema físico interactivo implementado con estas herramientas. Luego, vas a 
+intentar replicar este ejemplo.
+
+Ten presente que esta actividad es introductoria y no busca que domines estas 
+herramientas. Vas a seguir los siguientes pasos:
 
 1. Abre una versión actualizada de Google chrome o Microsogt edge.
 2. Abre en una pestaña este sitio [micro:bit editor](https://python.microbit.org/v/3).
@@ -198,40 +252,7 @@ function sendBtnClick() {
 16. Sacude el micro:bit. ¿Qué pasa?
 17. Presiona el botón Send Love. ¿Qué pasa?
 
-:::caution[📤 Bitácora]
-Es tu turno ahora de reproducir el ejemplo anterior. La idea es que te familiarices con
-las herramientas y puedas replicar el ejemplo. Luego de hacer el ejercicio, responde la siguiente pregunta:
-
-En este sistemas físico interactivo identifica los inputs, outputs y el proceso.
-
-:::
-
 ### Actividad 04
-
-#### Generando patrones visuales
-
-¿Te parece si exploramos juntos un poco más p5.js?
-
-
-Vamos a crear un programa en p5.js que genere patrones visuales aleatorios utilizando funciones matemáticas simples (ej. random(), sin(), cos()). Para 
-esta actividade no es necesario usar el micro:bit, solo p5.js.
-
-:::caution[📤 Bitácora]
-Crea tu propio programa en p5.js. En ti bitácora:
-
-* Escribe el enlace a tu programa en el editor de p5.js.
-* Copia el código de tu programa en la bitácora (recuerda insertarlo usando markdown y el lenguaje javascript).
-* Muestra una captura de pantalla del resultado de tu programa.
-:::
-
-
-
-## Apply: Aplicación 🛠
-
-Ahora vas a aplicar lo que has aprendido hasta ahora creando tu primer prototipo 
-de un sistema físico interactivo. Para ello, utilizarás p5.js y micro:bit.
-
-### Actividad 05
 
 #### Interacción básica con micro:bit
 
@@ -239,9 +260,17 @@ Vamos a crear juntos un programa en p5.js que interactúe con un micro:bit. La i
 el programa en p5.js muestre un cuadrado en la pantalla que cambie de color al 
 presionar un botón del micro:bit y regrese a su color original al soltar el botón. 
 
-Este programa lo crearemos paso paso mediante un tutorial. Para navegar por 
-este tutorial debes ir dando click en el botón "Siguiente" o 
+Este programa lo crearemos paso paso mediante un tutorial. 
+
+Para navegar por este tutorial debes ir dando click en el botón "Siguiente" o 
 "Anterior".
+
+<Aside type="caution">
+  **Importante:** el programa tienen intencionalmente un error que identificaremos 
+  y resolveremos juntos al final del tutorial. Presta mucha atención a cada paso
+  y reflexiona sobre lo que está pasando.
+</Aside>
+
 
 <TutorialViewer>
   <div data-slide-index="0">
@@ -527,99 +556,40 @@ este tutorial debes ir dando click en el botón "Siguiente" o
 
 </TutorialViewer>
 
-
 :::caution[📤 Bitácora]
-En tu bitácora: explica cómo funciona el sistema físico interactivo que acabamos de crear.
+En tu bitácora: ¿Por qué no funcionaba el programa con was_pressed() y por qué
+funciona con is_pressed()? Explica detalladamente.
 :::
 
+## Apply: Aplicación 🛠
 
+Ahora vas a aplicar lo que has aprendido hasta ahora resolviendo un problema 
+simple utilizando p5.js y micro:bit.
 
-### Actividad 06
+### Actividad 05
 
 #### Control de movimiento con micro:bit
 
 Crea un programa en p5.js que muestre un círculo en la pantalla. Utiliza 
-los botones A y B del micro:bit para controlar la posición en x del círculo en el canvas de p5.js. 
+los botones A y B del micro:bit para controlar la posición en x del círculo 
+en el canvas de p5.js. 
 
 :::caution[📤 Bitácora]
 En tu bitácora:
-* Escribe el enlace a tu programa en el editor de p5.js.
-* Copia el código de tu programa en la bitácora (recuerda insertarlo usando markdown y el lenguaje javascript).
-* Copia el código del micro:bit en la bitácora (recuerda insertarlo usando markdown y el lenguaje python).
+* El programa de p5.js.
+* El programa de micro:bit.
+* Explica detalladamente cómo funciona el sistema físico interactivo que
+  has creado.
 :::
-
 
 ## Reflect: Consolidación y metacognición 🤔
 
 Cerramos la unidad con una reflexión sobre lo aprendido y cómo se relaciona con tus metas
 personales y profesionales.
 
-**Tiempo para la actividad 07: 35 minutos.**  
-**Tiempo para la actividad 08: 35 minutos.**  
-**Tiempo para la actividad 09: 15 minutos.**
+### Actividad 06
 
-### Actividad 07
-
-####  Autoevaluación
-
-**Mirando hacia adentro: autoevaluación de conceptos y conexiones**
-
-El propósito de esta actividad es que recuperes de tu memoria los conceptos fundamentales de la unidad y reflexiones sobre cómo conectan con tus intereses profesionales. Este esfuerzo de recordar sin consultar tus notas (conocido como *retrieval practice*) es una de las formas más efectivas de construir conocimiento duradero.
-
-:::caution[📤 Bitácora]
-
-En tu bitácora. Sin mirar tus apuntes, los tutoriales o los sketches previos, responde a las siguientes preguntas con tus propias palabras. El objetivo es el proceso de recordar, no la perfección.
-
-**Parte 1: recuperación de conocimiento (Retrieval Practice)**
-
-1.  Basándote en los ejemplos que vimos de sistemas físicos interactivos al iniciar el curso, 
-describe las tres características que definen a un **sistema físico interactivo**.
-2.  Explica el modelo **input-process-output** de Patrick Hübner usando como ejemplo el sistema que construiste con micro:bit y p5.js en la Actividad 06. ¿Cuál fue el input, cuál fue el proceso y cuál fue el output?
-3.  ¿Cuál es la función de la línea `uart.write('A')` en el código del micro:bit y qué función en p5.js se encarga de "escuchar" ese mensaje?
-4.  ¿Cuál es la diferencia fundamental entre el arte/diseño tradicional y el **arte/diseño generativo**?
-5.  Imagina que quieres que un círculo en p5.js cambie a un color aleatorio cada vez que sacudes el micro:bit. Describe qué tendrías que programar en el micro:bit y qué tendrías que programar en p5.js para lograrlo.
-
-**Parte 2: reflexión sobre tu proceso (Metacognición)**
-
-1.  ¿Qué fue más desafiante para ti en esta unidad: la parte conceptual (entender qué es un sistema físico interactivo) o la parte técnica (hacer que el micro:bit y p5.js se comunicaran)? ¿Por qué?
-2.  Describe el momento "¡Aha!" que tuviste cuando lograste que una acción en el micro:bit (presionar un botón, sacudirlo) tuviera un efecto visible en el canvas de p5.js por primera vez. ¿Qué fue lo que entendiste en ese instante?
-3.  Al inicio de la unidad te pregunté: "¿Este curso para qué me sirve?". Después de experimentar y construir tu primer prototipo, ¿Cómo ha cambiado o se ha vuelto más concreta tu respuesta a esa pregunta?
-4.  El tutorial de la Actividad 05 te llevó paso a paso. ¿Cómo te sentiste con ese método de aprendizaje? ¿Te dio seguridad o preferirías haberlo intentado por tu cuenta desde el principio?
-:::
-
-
-### Actividad 08
-
-####  Coevaluación
-
-
-**Aprendiendo juntos: coevaluación constructiva**
-
-Ahora es el momento de analizar el trabajo de un compañero. El objetivo es dar una retroalimentación constructiva sobre el prototipo final de la unidad, una habilidad esencial para trabajar en equipos creativos y técnicos.
-
-:::caution[📤 Bitácora]
-
-1.  Encuentra un compañero de trabajo.
-2.  Intercambien las URLs de sus bitácoras de aprendizaje.
-3.  Concéntrate en la **Actividad 06: control de movimiento con micro:bit** de tu compañero. Lee su código (Python y JavaScript).
-4. Tu compañero resolvió el problema de manera diferente a ti, qué hizo diferente, qué aprendiste de su solución. En tu bitácora documenta lo anterior y escribe, como si le estuvieras explicando, lo que tú hiciste y por qué es diferente a lo que hizo tu compañero.
-:::
-
-
-### Actividad 09
-
-#### Feedback
-
-**Mejorando la experiencia: tu feedback es clave**
-
-Mi rol es guiarte en este aprendizaje, y tu perspectiva es fundamental para que pueda hacerlo mejor. Por favor, comparte tus pensamientos honestos para que pueda ajustar y enriquecer las próximas unidades del curso.
-
-:::caution[📤 Bitácora]
-Responde a las siguientes preguntas. Tu honestidad es el recurso más valioso para la mejora del curso.
-
-1.  **Continuar**: ¿Qué actividad, video o ejemplo de esta unidad te resultó más inspirador o te ayudó más a entender el potencial de los sistemas físicos interactivos?
-2.  **Dejar de hacer**: ¿Hubo alguna parte que te pareció demasiado abstracta, muy rápida o confusa? ¿Hay algo que crees que podríamos cambiar para que sea más claro?
-3.  **Empezar a hacer**: ¿Qué te genera más curiosidad ahora? ¿Te gustaría explorar más sensores del micro:bit (luz, temperatura), crear visualizaciones más complejas en p5.js o ver más ejemplos de proyectos artísticos?
-4.  **Balance inspiración vs. técnica**: ¿Cómo sentiste el equilibrio entre ver los videos inspiradores de la Actividad 01 y la parte técnica de conectar las herramientas en las actividades 03-06?
-5.  **Comentario adicional**: ¿Hay algo más que quieras compartir sobre tu experiencia en esta unidad introductoria?
-:::
+Vas a repasar lo aprendido en esta unidad. Regresa a la actividad 5 y trata de 
+explicar en tus propias palabras de la manera más detallada que puedas cómo funciona 
+el sistema físico interactivo. Analiza cada parte del código y su función dentro del 
+sistema. Si aún tienes dudas sobre alguna parte, aprovecha para aclararlas.
