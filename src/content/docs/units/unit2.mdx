@@ -72,3 +72,125 @@ unidad aplicarás lo aprendido al micro:bit, pero POR FAVOR no pierdas
 de vista que es una técnica de programación general que puedes aplicar
 en muchos otros lenguajes y plataformas.
 
+### Actividad 01
+
+#### Analizando un programa con una máquina de estados simple
+
+Analicemos juntos el siguiente código identificando estados, eventos y acciones. Responde las preguntas planteadas.
+
+``` py
+from microbit import *
+import utime
+
+class Timer:
+    def __init__(self, owner, event_to_post, duration):
+        self.owner = owner
+        self.event = event_to_post
+        self.duration = duration
+        
+        self.start_time = 0
+        self.active = False
+
+    def start(self, new_duration=None):
+        if new_duration is not None:
+            self.duration = new_duration
+        self.start_time = utime.ticks_ms()
+        self.active = True
+
+    def stop(self):
+        self.active = False
+
+    def update(self):
+        if self.active:
+            if utime.ticks_diff(utime.ticks_ms(), self.start_time) >= self.duration:
+                self.active = False
+                self.owner.post_event(self.event)
+
+
+class Pixel:
+    def __init__(self,_x,_y,_interval):
+        self.event_queue = []
+        self.timers = []
+        self.x = _x
+        self.y = _y
+        self.pixelState = 0
+        self.myTimer = self.createTimer("Timeout",_interval)
+
+        self.estado_actual = None
+        self.transicion_a(self.estado_waitTimeout)
+
+    def createTimer(self,event,duration):
+        t = Timer(self, event, duration)
+        self.timers.append(t)
+        return t
+
+    def post_event(self, ev):
+        self.event_queue.append(ev)
+
+    def update(self):
+        # 1. Actualizar todos los timers internos automáticamente
+        for t in self.timers:
+            t.update()
+        
+        # 2. Procesar la cola de eventos resultante
+        while len(self.event_queue) > 0:
+            ev = self.event_queue.pop(0)
+            if self.estado_actual:
+                self.estado_actual(ev)
+
+    def transicion_a(self, nuevo_estado):
+        if self.estado_actual: self.estado_actual("EXIT")
+        self.estado_actual = nuevo_estado
+        self.estado_actual("ENTRY")
+
+    def estado_waitTimeout(self, ev):
+        if ev == "ENTRY":
+            self.pixelState = 9
+            display.set_pixel(self.x,self.y,self.pixelState)
+            self.myTimer.start()
+        elif ev == "Timeout":
+            if self.pixelState == 0:
+                self.pixelState = 9
+                self.myTimer.start()
+            else: 
+                self.pixelState = 0
+                self.myTimer.start()
+            
+            display.set_pixel(self.x,self.y,self.pixelState)
+
+pixel1 = Pixel(0,0,1000)
+pixel2 = Pixel(4,4,600)
+
+while True:
+    pixel1.update()
+    pixel2.update()
+    utime.sleep_ms(20)
+```
+
+![Pixel State Machine](../../../assets/pixelStateMachine.svg)
+
+:::caution[📤 Bitácora] 
+Escribe en tu bitácora lo siguiente:
+
+1. ¿Cuáles son los estados en el programa? 
+2. ¿Cuáles son los eventos/inputs en el programa?
+3. ¿Cuáles son las acciones en el programa?
+:::
+
+## Seek: Investigación 🔎
+
+### Actividad 02
+
+#### Implementando un semáforo con máquinas de estados
+
+Implementemos juntos un semáforo simple utilizando una máquina de 
+estados en Micropython. Representaremos cada color del semáforo con 
+un LED del display del micro:bit. La secuencia de cambio del semáforo 
+será 2 segundos en rojo, 1 segundo en verde, 0.5 segundos en amarillo 
+y regresa a rojo repitiendo el ciclo.
+
+:::caution[📤 Bitácora]
+1. Escribe el código que soluciona este problema en tu bitácora.
+2. Identifica los estados, eventos y acciones en tu código.
+:::
+

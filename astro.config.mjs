@@ -8,8 +8,12 @@ import rehypeMathjax from 'rehype-mathjax';
 export default defineConfig({
 	base: '/interactivos1-2026-10',
 	markdown: {
+    	syntaxHighlight: {
+      		type: 'shiki',
+      		excludeLangs: ['math'],
+    	},		
 		remarkPlugins: [remarkMath],
-		rehypePlugins: [rehypeMathjax],
+		rehypePlugins: [rehypeMathjax]
 	},
 	integrations: [
 		starlight({
@@ -54,6 +58,8 @@ export default defineConfig({
 				},
 			],
 		}),
+		
+
 	],
 	site: 'https://jfUPB.github.io'
 });
