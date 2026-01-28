@@ -1,33 +1,33 @@
 @startuml
 
 <style>
-
-document {
-  Margin 20
+root {
+  BackgroundColor #4a556822 
+  FontColor #718096
+  LineColor #718096
+  Margin 30
   Padding 10
 }
 
 stateDiagram {
-  BackgroundColor white
-    state {
-        BackgroundColor aqua
-    }
+  state {
+    BackgroundColor #edf2f7
+    LineColor #4a5568
+    FontColor #2d3748
+    RoundCorner 10
+  }
+  arrow {
+    LineColor #718096
+    FontColor #718096
+  }
 }
 </style>
 
 
-title Pixel - UML State Machine (State Chart)
+title Pixel - UML State Machine
 
-' Estado inicial (construcción) -> transición al estado waitTimeout
-[*] --> WaitTimeout : constructor\n/ transicion_a(estado_waitTimeout)
-
-state WaitTimeout {
-}
-
-' Acciones de ENTRY del estado
+[*] --> WaitTimeout : Pixel() (constructor)
 WaitTimeout : entry /\n  pixelState = 9\n  display.set_pixel(x,y,pixelState)\n  myTimer.start()
-
-' Evento Timeout (self-transition: mismo estado, acciones internas)
 WaitTimeout --> WaitTimeout : Timeout /\n  if pixelState==0 then pixelState=9 else pixelState=0\n  myTimer.start()\n  display.set_pixel(x,y,pixelState)
 
 @enduml
