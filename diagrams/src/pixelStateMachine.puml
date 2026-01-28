@@ -1,0 +1,33 @@
+@startuml
+
+<style>
+
+document {
+  Margin 20
+  Padding 10
+}
+
+stateDiagram {
+  BackgroundColor white
+    state {
+        BackgroundColor aqua
+    }
+}
+</style>
+
+
+title Pixel - UML State Machine (State Chart)
+
+' Estado inicial (construcción) -> transición al estado waitTimeout
+[*] --> WaitTimeout : constructor\n/ transicion_a(estado_waitTimeout)
+
+state WaitTimeout {
+}
+
+' Acciones de ENTRY del estado
+WaitTimeout : entry /\n  pixelState = 9\n  display.set_pixel(x,y,pixelState)\n  myTimer.start()
+
+' Evento Timeout (self-transition: mismo estado, acciones internas)
+WaitTimeout --> WaitTimeout : Timeout /\n  if pixelState==0 then pixelState=9 else pixelState=0\n  myTimer.start()\n  display.set_pixel(x,y,pixelState)
+
+@enduml

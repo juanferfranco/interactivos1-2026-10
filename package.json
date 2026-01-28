@@ -3,11 +3,12 @@
   "type": "module",
   "version": "0.0.1",
   "scripts": {
-    "dev": "astro dev",
+    "dev": "npm run diagrams && astro dev",
     "start": "astro dev",
     "build": "astro build",
     "preview": "astro preview",
-    "astro": "astro"
+    "astro": "astro",
+    "diagrams": "node scripts/generate-plantuml.mjs"
   },
   "dependencies": {
     "@astrojs/starlight": "^0.37.4",
