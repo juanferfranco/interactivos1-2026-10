@@ -25,64 +25,34 @@ sequenceDiagram {
 }
 </style>
 
-title App Sequence Diagram
+title App Sequence Diagram for pixel1
 
 actor Main
 participant "pixel1:Pixel" as P1
 participant "pixel1.myTimer:Timer" as T1
 participant "display" as D
-participant "utime" as U
 
-== Inicialización ==
 Main -> P1 : Pixel(0,0,1000)
 activate P1
 P1 -> D : set_pixel(0,0,9)
 P1 -> T1 : start()
 deactivate P1
 
-== Loop infinito ==
+
 loop while True (cada ~20ms)
   Main -> P1 : update()
   activate P1
     P1 -> T1 : update()
     activate T1
-      T1 -> U : ticks_ms()
-      T1 -> U : ticks_diff(now, start_time)
-      alt expiró (>= duration)
+      alt Ocurre Timeout
         T1 -> P1 : post_event("Timeout")
-      else no expiró
       end
     deactivate T1
 
-    alt hay eventos en event_queue
-      P1 -> P1 : estado_waitTimeout("Timeout")
-      P1 -> T1 : start()
-      P1 -> D : set_pixel(x,y,pixelState)
-    else no hay eventos
-    end
+    P1 -> P1: procesa eventos
+    
   deactivate P1
 
-  Main -> P2 : update()
-  activate P2
-    P2 -> T2 : update()
-    activate T2
-      T2 -> U : ticks_ms()
-      T2 -> U : ticks_diff(now, start_time)
-      alt expiró (>= duration)
-        T2 -> P2 : post_event("Timeout")
-      else no expiró
-      end
-    deactivate T2
-
-    alt hay eventos en event_queue
-      P2 -> P2 : estado_waitTimeout("Timeout")
-      P2 -> T2 : start()
-      P2 -> D : set_pixel(x,y,pixelState)
-    else no hay eventos
-    end
-  deactivate P2
-
-  Main -> U : sleep_ms(20)
 end
 
 @enduml
