@@ -192,17 +192,158 @@ será 2 segundos en rojo --> 1 segundo en verde --> 0.5 segundos en amarillo
 --> regresa a rojo --> repite el ciclo.
 
 
+```py
+from microbit import *
+import utime
+
+class Timer:
+    def __init__(self, owner, event_to_post, duration):
+        self.owner = owner
+        self.event = event_to_post
+        self.duration = duration
+        
+        self.start_time = 0
+        self.active = False
+
+    def start(self, new_duration=None):
+        if new_duration is not None:
+            self.duration = new_duration
+        self.start_time = utime.ticks_ms()
+        self.active = True
+
+    def stop(self):
+        self.active = False
+
+    def update(self):
+        if self.active:
+            if utime.ticks_diff(utime.ticks_ms(), self.start_time) >= self.duration:
+                self.active = False
+                self.owner.post_event(self.event)
+
+
+class Semaforo:
+    def __init__(self,_x,_y,_timeInRed,_timeInGreen,_timeInYellow):
+        self.event_queue = []
+        self.timers = []
+        self.x = _x
+        self.y = _y
+        self.timeInRed = _timeInRed
+        self.timeInGreen = _timeInGreen
+        self.timeInYellow = _timeInYellow
+        self.myTimer = self.createTimer("Timeout",self.timeInRed)
+
+        self.estado_actual = None
+        self.transicion_a(self.estado_waitInRed)
+
+    def createTimer(self,event,duration):
+        t = Timer(self, event, duration)
+        self.timers.append(t)
+        return t
+
+    def post_event(self, ev):
+        self.event_queue.append(ev)
+
+    def update(self):
+        # 1. Actualizar todos los timers internos automáticamente
+        for t in self.timers:
+            t.update()
+        
+        # 2. Procesar la cola de eventos resultante
+        while len(self.event_queue) > 0:
+            ev = self.event_queue.pop(0)
+            if self.estado_actual:
+                self.estado_actual(ev)
+
+    def transicion_a(self, nuevo_estado):
+        if self.estado_actual: self.estado_actual("EXIT")
+        self.estado_actual = nuevo_estado
+        self.estado_actual("ENTRY")
+
+    def clear(self):
+        display.set_pixel(self.x,self.y,0)
+        display.set_pixel(self.x,self.y+1,0)
+        display.set_pixel(self.x,self.y+2,0)
+
+    def estado_waitInRed(self, ev):
+        if ev == "ENTRY":
+            self.clear()
+            display.set_pixel(self.x,self.y,9)
+            self.myTimer.start(self.timeInRed)
+        if ev == "Timeout":
+            display.set_pixel(self.x,self.y,0)
+            self.transicion_a(self.estado_waitInGreen)
+
+    def estado_waitInGreen(self, ev):
+        if ev == "ENTRY":
+            self.clear()
+            display.set_pixel(self.x,self.y+2,9)
+            self.myTimer.start(self.timeInGreen)
+            
+        if ev == "Timeout":
+            display.set_pixel(self.x,self.y+2,0)
+            self.transicion_a(self.estado_waitInYellow)
+
+        if ev == "A":
+            display.set_pixel(self.x,self.y+2,0)
+            self.transicion_a(self.estado_waitInYellow)
+
+    def estado_waitInYellow(self, ev):
+        if ev == "ENTRY":
+            self.clear()
+            display.set_pixel(self.x,self.y+1,9)
+            self.myTimer.start(self.timeInYellow)
+        if ev == "Timeout":
+            display.set_pixel(self.x,self.y+1,0)
+            self.transicion_a(self.estado_waitInRed)
+
+semaforo1 = Semaforo(0,0,2000,1000,500)
+
+while True:
+    semaforo1.update()
+    utime.sleep_ms(20)
+
+```
 
 
 :::caution[📤 Bitácora]
-1. Escribe el código que soluciona este problema en tu bitácora.
-2. Identifica los estados, eventos y acciones en tu código.
+1. Vas a realizar una modificación. Cuando el semáforo esté en verde, 
+   si se presiona el botón A, el semáforo debe cambiar inmediatamente 
+   a amarillo (sin esperar a que termine el tiempo de verde). El evento 
+   que se debe postear es "A" (post_event("A")).
 :::
-
 
 ### Actividad 03
 
 #### Máquina de estados con botones
+
+Implementaremos juntos el siguiente programa que busca gestionar la concurrencia 
+entre la secuencia de imágenes y la respuesta a la pulsación de botones.
+
+Lee la siguiente descripción del problema y luego analiza la solución 
+implementada. Para el análisis trata de observar estas preguntas:
+
+* ¿Cómo es posible estructurar una aplicación usando una máquina de estados 
+para poder atender varios eventos de manera concurrente?
+
+* ¿Cómo haces para probar que el programa está correcto?
+
+**Descripción del problema**
+
+Imagina un programa para el micro:bit que muestra diferentes imágenes y que también 
+**reacciona de inmediato** si presionas un botón. Al iniciar, se muestra un 
+corazón durante un segundo y medio. Después, el micro:bit cambia a 
+un pacman que dura un segundo. Luego, aparece un ghost durante dos 
+segundos, y el ciclo vuelve a comenzar.
+
+Sin embargo, si en cualquier momento se presiona el botón A mientras está el corazón 
+saltará inmediatamente al ghost. Si se presiona el botón A mientras está el pacman, 
+saltará al corazón. Si se presiona el botón A mientras está el ghost, se mostrará el pacman.
+
+```py 
+
+```
+
+
 
 :::caution[📤 Bitácora]
 :::
