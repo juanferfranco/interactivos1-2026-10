@@ -457,13 +457,21 @@ la máquina de estados modelada. ¿Hay algo que aún no comprendes completamente
 
 #### Temporizador interactivo con máquina de estados
 
-:::warning[Importante]
-La solución a este problema TIENE una restricción importante y es 
-que debes utilizar la misma arquitectura de máquina de estados que
-hemos venido trabajando en las actividades anteriores. También debes 
-usar la clase Timer para gestionar el tiempo. Si no cumples con esta 
-restricción, aunque tu aplicación funcione correctamente, el criterio 
-C1 de la rúbrica analítica será calificado con 0.0.
+:::caution[Importante]
+La solución a este problema TIENE algunas restricciones importantes. 
+Si no cumples con estas restricciones, aunque tu aplicación funcione 
+correctamente, el criterio C1 de la rúbrica analítica será calificado 
+con 0.0.
+
+* Debes utilizar la misma arquitectura de máquina de estados que
+hemos venido trabajando en las actividades anteriores. 
+* Debes usar la clase Timer para gestionar el tiempo.
+* Debes emplear la función make_fill_images() para crear las imágenes
+del display y la función display.show(FILL[n]) para mostrarlas.
+* Debes usar los eventos "A", "B" y "S" para los botones y el gesto 
+de shake respectivamente.
+* NO PUEDES usar sleep() en la implementación de la máquina de estados. Recuerda 
+usar Timer para gestionar los tiempos.
 :::
 
 En un escape room se requiere construir una aplicación para controlar una temporizador. 
@@ -500,6 +508,125 @@ el temporizador se reinicia a 20 pixeles quedando desarmado y listo para una nue
 8. Al generar los eventos de los botones y el gesto de shake, recuerda usar
 el método post_event("EVENTO") para enviar los eventos a la máquina de estados. Los 
 eventos será "A", "B" y "S" respectivamente.
+
+Te dejo el código base para que puedas iniciar tu desarrollo:
+
+**Función para crear las imágenes de llenado del display:**
+
+```py
+def make_fill_images(on='9', off='0'):
+    imgs = []
+    for n in range(26): 
+        rows = []
+        k = 0
+        for y in range(5):
+            row = []
+            for x in range(5):
+                row.append(on if k < n else off)
+                k += 1
+            rows.append(''.join(row))
+        imgs.append(Image(':'.join(rows)))
+    return imgs
+
+FILL = make_fill_images()
+# Para mostrar usas display.show(FILL[n]) donde n será
+# un valor de 0 a 25
+```
+
+**Timer:**
+
+```py
+class Timer:
+    def __init__(self, owner, event_to_post, duration):
+        self.owner = owner
+        self.event = event_to_post
+        self.duration = duration
+        self.start_time = 0
+        self.active = False
+
+    def start(self, new_duration=None):
+        if new_duration is not None:
+            self.duration = new_duration
+        self.start_time = utime.ticks_ms()
+        self.active = True
+
+    def stop(self):
+        self.active = False
+
+    def update(self):
+        if self.active:
+            if utime.ticks_diff(utime.ticks_ms(), self.start_time) >= self.duration:
+                self.active = False
+                self.owner.post_event(self.event)
+```
+
+**Estructura básica de una tarea con máquina de estados:**
+
+```py
+class Task:
+    def __init__(self):
+        self.event_queue = []
+        self.timers = []
+        # Personalizas el nombre del evento y la duración
+        self.myTimer = self.createTimer("Timeout",1000) 
+
+        self.estado_actual = None
+        self.transicion_a(self.estado_estado1)
+
+    def createTimer(self,event,duration):
+        t = Timer(self, event, duration)
+        self.timers.append(t)
+        return t
+
+    def post_event(self, ev):
+        self.event_queue.append(ev)
+
+    def update(self):
+        # 1. Actualizar todos los timers internos automáticamente
+        for t in self.timers:
+            t.update()
+        
+        # 2. Procesar la cola de eventos resultante
+        while len(self.event_queue) > 0:
+            ev = self.event_queue.pop(0)
+            if self.estado_actual:
+                self.estado_actual(ev)
+
+    def transicion_a(self, nuevo_estado):
+        if self.estado_actual: self.estado_actual("EXIT")
+        self.estado_actual = nuevo_estado
+        self.estado_actual("ENTRY")
+
+
+    def estado_estado1(self, ev):
+        if ev == "ENTRY":
+            pass
+        if ev == "Timeout":
+            pass
+
+    def estado_estado2(self, ev):
+        if ev == "ENTRY":
+            pass
+        if ev == "Timeout":
+            pass
+```
+
+**El ciclo principal:**
+
+```py
+task = Task()
+while True:
+    # Aquí generas los eventos de los botones y el gesto
+    if button_a.was_pressed(): 
+        task.post_event("A")
+    if button_b.was_pressed(): 
+        task.post_event("B")
+    if accelerometer.was_gesture("shake"):
+        task.post_event("S")
+        
+    task.update()
+    utime.sleep_ms(20)
+```
 
 :::caution[📤 Bitácora]
 1. Construye la máquina de estados que modela el problema usando [PlanUML](https://plantuml.com/). 
