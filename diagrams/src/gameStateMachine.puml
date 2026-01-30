@@ -1,0 +1,40 @@
+@startuml
+
+<style>
+root {
+  BackgroundColor #4a556822 
+  FontColor #718096
+  LineColor #718096
+  Margin 30
+  Padding 10
+}
+
+stateDiagram {
+  state {
+    BackgroundColor #edf2f7
+    LineColor #4a5568
+    FontColor #2d3748
+    RoundCorner 10
+  }
+  arrow {
+    LineColor #718096
+    FontColor #718096
+  }
+}
+</style>
+
+
+title Game - UML State Machine
+
+[*] --> waitInHeart : Game() (constructor)
+waitInHeart : entry /\n  display.show(Image.HEART)\n  myTimer.start(timeInHeart)
+waitInHeart --> waitInPacman : Timeout /
+waitInHeart --> waitInGhost : A /
+waitInPacman : entry /\n  display.show(Image.PACMAN)\n  myTimer.start(timeInPacman)
+waitInPacman --> waitInGhost : Timeout /
+waitInPacman --> waitInHeart : A /
+waitInGhost : entry /\n  display.show(Image.GHOST)\n  myTimer.start(timeInGhost)
+waitInGhost --> waitInHeart : Timeout /
+waitInGhost --> waitInPacman : A /
+
+@enduml

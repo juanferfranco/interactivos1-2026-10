@@ -339,31 +339,185 @@ Sin embargo, si en cualquier momento se presiona el botón A mientras está el c
 saltará inmediatamente al ghost. Si se presiona el botón A mientras está el pacman, 
 saltará al corazón. Si se presiona el botón A mientras está el ghost, se mostrará el pacman.
 
+![Game State Machine](../../../assets/gameStateMachine.svg)
+
 ```py 
+from microbit import *
+import utime
+
+class Timer:
+    def __init__(self, owner, event_to_post, duration):
+        self.owner = owner
+        self.event = event_to_post
+        self.duration = duration
+        self.start_time = 0
+        self.active = False
+
+    def start(self, new_duration=None):
+        if new_duration is not None:
+            self.duration = new_duration
+        self.start_time = utime.ticks_ms()
+        self.active = True
+
+    def stop(self):
+        self.active = False
+
+    def update(self):
+        if self.active:
+            if utime.ticks_diff(utime.ticks_ms(), self.start_time) >= self.duration:
+                self.active = False
+                self.owner.post_event(self.event)
+
+
+class Game:
+    def __init__(self):
+        self.event_queue = []
+        self.timers = []
+        self.timeInHeart = 2500
+        self.timeInPacman = 1000
+        self.timeInGhost = 2000
+        self.myTimer = self.createTimer("Timeout",self.timeInHeart)
+
+        self.estado_actual = None
+        self.transicion_a(self.estado_waitInHeart)
+
+    def createTimer(self,event,duration):
+        t = Timer(self, event, duration)
+        self.timers.append(t)
+        return t
+
+    def post_event(self, ev):
+        self.event_queue.append(ev)
+
+    def update(self):
+        # 1. Actualizar todos los timers internos automáticamente
+        for t in self.timers:
+            t.update()
+        
+        # 2. Procesar la cola de eventos resultante
+        while len(self.event_queue) > 0:
+            ev = self.event_queue.pop(0)
+            if self.estado_actual:
+                self.estado_actual(ev)
+
+    def transicion_a(self, nuevo_estado):
+        if self.estado_actual: self.estado_actual("EXIT")
+        self.estado_actual = nuevo_estado
+        self.estado_actual("ENTRY")
+
+
+    def estado_waitInHeart(self, ev):
+        if ev == "ENTRY":
+            display.show(Image.HEART)
+            self.myTimer.start(self.timeInHeart)
+        if ev == "Timeout":
+            self.transicion_a(self.estado_waitInPacman)
+        if ev == "A":
+            self.transicion_a(self.estado_waitInGhost)
+
+
+    def estado_waitInPacman(self, ev):
+        if ev == "ENTRY":
+            display.show(Image.PACMAN)
+            self.myTimer.start(self.timeInPacman)
+        if ev == "Timeout":
+            self.transicion_a(self.estado_waitInGhost)
+        if ev == "A":
+            self.transicion_a(self.estado_waitInHeart)     
+
+    def estado_waitInGhost(self, ev):
+        if ev == "ENTRY":
+            display.show(Image.GHOST)
+            self.myTimer.start(self.timeInGhost)
+        if ev == "Timeout":
+            self.transicion_a(self.estado_waitInHeart)
+        if ev == "A":
+            self.transicion_a(self.estado_waitInPacman) 
+        
+game = Game()
+
+while True:
+    if button_a.was_pressed(): 
+        game.post_event("A")
+    game.update()
+    utime.sleep_ms(20)
 
 ```
 
 
 
 :::caution[📤 Bitácora]
+Vamos a tomarnos un momento para revisar de manera individual el código y 
+la máquina de estados modelada. ¿Hay algo que aún no comprendes completamente?
 :::
 
 ## Apply: Aplicación 🛠
 
 ### Actividad 04
 
-#### Cronómetro interactivo con máquina de estados
+#### Temporizador interactivo con máquina de estados
+
+:::warning[Importante]
+La solución a este problema TIENE una restricción importante y es 
+que debes utilizar la misma arquitectura de máquina de estados que
+hemos venido trabajando en las actividades anteriores. También debes 
+usar la clase Timer para gestionar el tiempo. Si no cumples con esta 
+restricción, aunque tu aplicación funcione correctamente, el criterio 
+C1 de la rúbrica analítica será calificado con 0.0.
+:::
+
+En un escape room se requiere construir una aplicación para controlar una temporizador. 
+El circuito de control de este está compuesto por tres sensores, denominados 
+UP (botón A), DOWN (botón B) y ARMED (el gesto de shake de acelerómetro). 
+Tiene dos actuadores o dispositivos de salida que serán un display (la pantalla de LEDs) y 
+un speaker.
+
+**El controlador funciona así:**
+
+1. Inicia en modo de configuración, es decir, sin hacer cuenta regresiva aún, 
+el temporizador está desarmado. El valor inicial del conteo regresivo es de 20 pixeles comenzando 
+desde la parte superior izquierda del display y avanzando fila por fila hasta la parte inferior derecha.
+Cada pixel representa 1 segundo.
+
+2. En el modo de configuración, los pulsadores A y B permiten aumentar o disminuir 
+la cantidad de pixeles que contará el temporizador. 
+
+3. El tiempo se puede programar entre 15 y 25 pixeles. 
+
+4. Es obligatorio usar la clase Timer para gestionar el tiempo. No olvides que los tiempos 
+están en milisegundos, es decir, 1 segundo equivale a 1000 milisegundos.
+
+5. Hacer shake (ARMED) arma el temporizador, es decir, inicia el conteo regresivo.
+
+6. Una vez armado el temporizador, comienza la cuenta regresiva que será visualizada 
+en la pantalla de LED apagando un pixel cada segundo y comenzando desde el pixel 
+de la parte inferior hasta el pixel de la parte superior izquierda.
+
+7. Una vez el temporizador termine se debe mostrar en el display una calavera y
+sonar el speaker. Para volver a modo de configuración se debe presionar el botón A y 
+el temporizador se reinicia a 20 pixeles quedando desarmado y listo para una nueva configuración.
+
+8. Al generar los eventos de los botones y el gesto de shake, recuerda usar
+el método post_event("EVENTO") para enviar los eventos a la máquina de estados. Los 
+eventos será "A", "B" y "S" respectivamente.
 
 :::caution[📤 Bitácora]
+1. Construye la máquina de estados que modela el problema usando [PlanUML](https://plantuml.com/). 
+Puedes encontrar el editor [Aquí](https://editor.plantuml.com/) y la documentación básica con 
+ejemplos [aquí](https://plantuml.com/state-diagram).
+2. Implementa el código en Micropython y colócalo en tu bitácora. Recuerda que puedes 
+usar el simulador de micro:bit en [este enlace](https://python.microbit.org/v/3).
 :::
 
 ## Reflect: Consolidación y metacognición 🤔
 
 ### Actividad 05
 
-Esta actividad es un reto final. La idea es modificar el cronómetro
-interactivo de modo que puedas controlarlo también con p5.js además 
-de los botones del micro:bit.
+Esta actividad es un reto final. La idea es modificar el temporizador
+interactivo de modo que puedas controlarlo también desde p5.js además 
+de los botones del micro:bit. Usa las letras A, B y S para simular los 
+botones UP, DOWN y ARMED respectivamente. Además, recuerda que en la unidad 
+1 Actividad 03 ya tienes la receta para recibir mensajes desde p5.js al micro:bit. 
 
 :::caution[📤 Bitácora]
 1. Explica cómo resolviste el reto.
