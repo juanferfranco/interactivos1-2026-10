@@ -11,9 +11,9 @@
     "diagrams": "node scripts/generate-plantuml.mjs"
   },
   "dependencies": {
-    "@astrojs/starlight": "^0.37.4",
+    "@astrojs/starlight": "^0.37.5",
     "@babel/runtime": "^7.26.10",
-    "astro": "^5.16.15",
+    "astro": "^5.17.1",
     "esbuild": ">=0.25.0",
     "p5": "^1.11.7",
     "rehype-mathjax": "^6.0.0",
