@@ -84,7 +84,114 @@ estructura del programa y luego el código completo.
 
 ![pixel1 Sequence Diagram](../../../assets/pixelSequence.svg)
 
+<details>
+<summary>Fuente del diagrama anterior</summary>
+```
+@startuml
+
+<style>
+root {
+  BackgroundColor #4a556822 
+  FontColor #718096
+  LineColor #718096
+  Margin 30
+  Padding 10
+}
+
+sequenceDiagram {
+  participant {
+    BackgroundColor #edf2f7
+    LineColor #4a5568
+    FontColor #2d3748
+  }
+  lifeLine {
+    LineColor #718096
+  }
+  arrow {
+    LineColor #718096
+    FontColor #718096
+  }
+}
+</style>
+
+title App Sequence Diagram for pixel1
+
+actor Main
+participant "pixel1:Pixel" as P1
+participant "pixel1.myTimer:Timer" as T1
+participant "display" as D
+
+Main -> P1 : Pixel(0,0,1000)
+activate P1
+P1 -> D : set_pixel(0,0,9)
+P1 -> T1 : start()
+deactivate P1
+
+
+loop while True (cada ~20ms)
+  Main -> P1 : update()
+  activate P1
+    P1 -> T1 : update()
+    activate T1
+      alt Ocurre Timeout
+        T1 -> P1 : post_event("Timeout")
+      end
+    deactivate T1
+
+    P1 -> P1: procesa eventos
+    
+  deactivate P1
+
+end
+
+@enduml
+
+```
+
+</details>
+
 ![Pixel State Machine](../../../assets/pixelStateMachine.svg)
+
+<details>
+<summary>Fuente del diagrama anterior</summary>
+```
+@startuml
+
+<style>
+root {
+  BackgroundColor #4a556822 
+  FontColor #718096
+  LineColor #718096
+  Margin 30
+  Padding 10
+}
+
+stateDiagram {
+  state {
+    BackgroundColor #edf2f7
+    LineColor #4a5568
+    FontColor #2d3748
+    RoundCorner 10
+  }
+  arrow {
+    LineColor #718096
+    FontColor #718096
+  }
+}
+</style>
+
+
+title Pixel - UML State Machine
+
+[*] --> WaitTimeout : Pixel() (constructor)
+WaitTimeout : entry /\n  pixelState = 9\n  display.set_pixel(x,y,pixelState)\n  myTimer.start()
+WaitTimeout : \n Timeout /\n  if pixelState==0 then pixelState=9 else pixelState=0\n  myTimer.start()\n  display.set_pixel(x,y,pixelState)
+
+@enduml
+
+```
+
+</details>
 
 
 ``` py
@@ -179,6 +286,49 @@ while True:
 Otra manera de modelar la solución del problema es esta:
 
 ![Pixel State Machine 2](../../../assets/pixelStateMachine2.svg)
+
+<details>
+<summary>Fuente del diagrama anterior</summary>
+
+```
+@startuml
+
+<style>
+root {
+  BackgroundColor #4a556822 
+  FontColor #718096
+  LineColor #718096
+  Margin 30
+  Padding 10
+}
+
+stateDiagram {
+  state {
+    BackgroundColor #edf2f7
+    LineColor #4a5568
+    FontColor #2d3748
+    RoundCorner 10
+  }
+  arrow {
+    LineColor #718096
+    FontColor #718096
+  }
+}
+</style>
+
+
+title Pixel - UML State Machine
+
+[*] --> WaitInON : Pixel() (constructor)
+WaitInON : entry /\n  pixelState = 9\n  display.set_pixel(x,y,pixelState)\n  myTimer.start()
+WaitInON --> WaitInOFF : \n Timeout /
+WaitInOFF: entry /\n  pixelState = 0\n  display.set_pixel(x,y,pixelState)\n  myTimer.start()
+WaitInOFF --> WaitInON : \n Timeout /
+
+@enduml
+```
+</details>
+
 
 ```py
 from microbit import *
@@ -461,6 +611,10 @@ Sin embargo, si en cualquier momento se presiona el botón A mientras está el c
 saltará inmediatamente al ghost. Si se presiona el botón A mientras está el pacman, 
 saltará al corazón. Si se presiona el botón A mientras está el ghost, se mostrará el pacman.
 
+![Game State Machine](../../../assets/gameStateMachine.svg)
+
+<details>
+<summary>Fuente del diagrama anterior</summary>
 
 ```plantuml
 @startuml
@@ -481,8 +635,8 @@ waitInGhost --> waitInPacman : A /
 @enduml
 
 ```
+</details>
 
-![Game State Machine](../../../assets/gameStateMachine.svg)
 
 ```py 
 from microbit import *
