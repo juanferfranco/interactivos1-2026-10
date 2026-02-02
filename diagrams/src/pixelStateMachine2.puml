@@ -26,8 +26,10 @@ stateDiagram {
 
 title Pixel - UML State Machine
 
-[*] --> WaitTimeout : Pixel() (constructor)
-WaitTimeout : entry /\n  pixelState = 9\n  display.set_pixel(x,y,pixelState)\n  myTimer.start()
-WaitTimeout : \n Timeout /\n  if pixelState==0 then pixelState=9 else pixelState=0\n  myTimer.start()\n  display.set_pixel(x,y,pixelState)
+[*] --> WaitInON : Pixel() (constructor)
+WaitInON : entry /\n  pixelState = 9\n  display.set_pixel(x,y,pixelState)\n  myTimer.start()
+WaitInON --> WaitInOFF : \n Timeout /
+WaitInOFF: entry /\n  pixelState = 0\n  display.set_pixel(x,y,pixelState)\n  myTimer.start()
+WaitInOFF --> WaitInON : \n Timeout /
 
 @enduml
