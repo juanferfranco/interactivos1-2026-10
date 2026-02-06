@@ -741,7 +741,133 @@ while True:
 
 ```
 
+:::tip[Solo para las personas curiosas]
+Podemos construir la aplicación con máquinas de estado usando 
+herencia. Te muestro cómo se hace en la sección oculta a continuación.
+:::
 
+<details>
+<summary>Implementación usando herencia</summary>
+El editor de micropython del micro:bit soporta aplicaciones 
+con varios archivos. Puedes acceder a esta característica en 
+el menú Projects. Allí crearás un par de archivos llamados 
+main.py y fsm.py. En fsm.py tendremos la implementación 
+de la clase base para las máquinas de estados y en main.py
+la implementación específica de la aplicación en cuestión.
+
+**fsm.py**
+
+```py
+import utime
+
+ENTRY = "ENTRY"
+EXIT  = "EXIT"
+
+class Timer:
+    def __init__(self, owner, event_to_post, duration):
+        self.owner = owner
+        self.event = event_to_post
+        self.duration = duration
+        self.start_time = 0
+        self.active = False
+
+    def start(self, new_duration=None):
+        if new_duration is not None:
+            self.duration = new_duration
+        self.start_time = utime.ticks_ms()
+        self.active = True
+
+    def stop(self):
+        self.active = False
+
+    def update(self):
+        if self.active and utime.ticks_diff(utime.ticks_ms(), self.start_time) >= self.duration:
+            self.active = False
+            self.owner.post_event(self.event)
+
+
+class FSMTask:
+    def __init__(self):
+        self._q = []
+        self._timers = []
+        self._state = None
+
+    def post_event(self, ev):
+        self._q.append(ev)
+
+    def add_timer(self, event, duration):
+        t = Timer(self, event, duration)
+        self._timers.append(t)
+        return t
+
+    def transition_to(self, new_state):
+        if self._state:
+            self._state(EXIT)
+        self._state = new_state
+        self._state(ENTRY)
+
+    def update(self):
+        for t in self._timers:
+            t.update()
+        while self._q:
+            ev = self._q.pop(0)
+            if self._state:
+                self._state(ev)
+```
+
+**main.py**
+
+```py
+from microbit import *
+import utime
+from fsm import FSMTask, ENTRY
+
+class Game(FSMTask):
+    def __init__(self):
+        super().__init__()
+        self.timeInHeart = 2500
+        self.timeInPacman = 1000
+        self.timeInGhost = 2000
+        self.myTimer = self.add_timer("Timeout",self.timeInHeart)
+        self.transition_to(self.estado_waitInHeart)
+
+    def estado_waitInHeart(self, ev):
+        if ev == ENTRY:
+            display.show(Image.HEART)
+            self.myTimer.start(self.timeInHeart)
+        if ev == "Timeout":
+            self.transition_to(self.estado_waitInPacman)
+        if ev == "A":
+            self.transition_to(self.estado_waitInGhost)
+
+
+    def estado_waitInPacman(self, ev):
+        if ev == "ENTRY":
+            display.show(Image.PACMAN)
+            self.myTimer.start(self.timeInPacman)
+        if ev == "Timeout":
+            self.transition_to(self.estado_waitInGhost)
+        if ev == "A":
+            self.transition_to(self.estado_waitInHeart)
+
+    def estado_waitInGhost(self, ev):
+        if ev == ENTRY:
+            display.show(Image.GHOST)
+            self.myTimer.start(self.timeInGhost)
+        if ev == "Timeout":
+            self.transition_to(self.estado_waitInHeart)
+        if ev == "A":
+            self.transition_to(self.estado_waitInPacman)
+
+game = Game()
+
+while True:
+    if button_a.was_pressed(): game.post_event("A")
+    game.update()
+    utime.sleep_ms(20)
+```
+
+</details>
 
 :::caution[📤 Bitácora]
 Vamos a tomarnos un momento para revisar de manera individual el código y 
