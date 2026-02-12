@@ -2,3 +2,171 @@
 title: Unidad 3
 unitId: unit3
 ---
+
+import { Aside } from '@astrojs/starlight/components';
+
+## Introducción 📜
+
+En esta unidad vas a seguir explorando la integración entre micro:bit y p5.js,
+al tiempo que profundizarás en la técnica de programación con máquinas de estado. 
+Volverás a practicar dicha técnica con el micro:bit, pero también en p5.js.
+
+Te preguntarás ¿Por qué tanta insistencia del profe con esta técnica? Y la razón 
+es que ella te permitirá lograr en tus aplicaciones escalabilidad, en términos de 
+concurrencia, es decir, permitirá que una aplicación tenga múltiples TAREAS 
+haciendo al mismo tiempo varias cosas.
+
+
+## Rúbrica de evaluación de la unidad 📝
+
+:::note[Transparencia]
+Esta rúbrica se socializa antes de la sustentación. La sustentación se 
+basa en lo presentado en la aplicación y lo documentado en la bitácora. 
+:::
+
+### Requisito de salida (condición necesaria)
+
+:::caution[Para poder cerrar la evaluación y registrar la nota]
+La **bitácora de reflexión** debe estar diligenciada antes de terminar 
+la sesión final y debe ser enseñada al profesor antes de abandonar el aula.
+La presentación de la bitácora de reflexión es un requisito indispensable 
+para montar la nota final en la plataforma académica. Si no se cumple este 
+requisito, la nota final de la unidad será 0.0.
+:::
+
+---
+
+### Rúbrica analítica
+
+:::tip[Evidencias evaluadas]
+
+1) Funcionamiento de la aplicación + documentación en bitácora.
+2) Sustentación a partir de la app y la bitácora de aplicación.
+
+:::
+
+| Criterio (peso) | Cumple plenamente (5.0) | Se cumple medianamente (4.0)| Problemas importantes (3.0)| Falta comprensión básica (2.0) | No hay evidencia (0.0)
+|---|---|---|---|---|---|
+| **1. Aplicación + bitácora (40%)** | La app se ejecuta sin fallos en el entorno acordado. Evidencia completa y verificable en bitácora. Todo consistente con lo mostrado en la demo. | La app funciona y cumple lo esencial. La bitácora permite verificar, pero hay **1–2 vacíos menores**| La app funciona parcialmente o depende de condiciones no declaradas. Bitácora con **vacíos importantes** o incompleta. | La app no corre o no demuestra lo requerido. La bitácora no permite verificación de la app.| No se entregaron evidencias o no se puede acceder a ellas |
+|Evaluación||||||
+| **2. Sustentación (60%)** | Responde a las preguntas con precisión, conectando: **(a) lo que se ve**, **(b) cómo está hecho**, y **(c) por qué**. Usa su bitácora para justificar decisiones. Reconoce límites/errores y propone cómo probar/mejorar. | Respuestas correctas pero con **imprecisiones menores** o justificación superficial. Usa parcialmente la bitácora para sustentar. | Responde solo “qué hizo” pero le cuesta explicar “cómo” o “por qué”. Necesita guía para conectar con su propia evidencia/bitácora. | No logra responder de forma coherente o responde sin relación con lo presentado/documentado. Evidencia falta de comprensión básica del trabajo entregado. | No se entregaron evidencias o no se puede acceder a ellas |
+|Evaluación||||||
+---
+
+:::tip[Cálculo de la nota]
+
+$$
+Nota = C_1*0.4  + C_2*0.6
+$$
+
+:::
+
+---
+
+## Set: ¿Qué aprenderás en esta unidad? 💡
+
+Vas a seguir practicando la técnica de programación con 
+máquinas de estado y a transferirla a p5.js.
+
+### Actividad 01
+
+Regresemos a la actividad del semáforo de la unidad anterior. Te 
+pediré que hagas las siguientes modificaciones:
+
+1. Realiza un refactoring del código. Implementa la aplicación 
+usando herencia implementando la clase semáforo así:
+
+```py
+class Semaforo(FSMTask):
+```
+
+Recuerda que la clase `FSMTask` es la clase base para implementar máquinas de estado y 
+está en el archivo fsm.py:
+
+```py
+import utime
+
+ENTRY = "ENTRY"
+EXIT  = "EXIT"
+
+class Timer:
+    def __init__(self, owner, event_to_post, duration):
+        self.owner = owner
+        self.event = event_to_post
+        self.duration = duration
+        self.start_time = 0
+        self.active = False
+
+    def start(self, new_duration=None):
+        if new_duration is not None:
+            self.duration = new_duration
+        self.start_time = utime.ticks_ms()
+        self.active = True
+
+    def stop(self):
+        self.active = False
+
+    def update(self):
+        if self.active and utime.ticks_diff(utime.ticks_ms(), self.start_time) >= self.duration:
+            self.active = False
+            self.owner.post_event(self.event)
+
+
+class FSMTask:
+    def __init__(self):
+        self._q = []
+        self._timers = []
+        self._state = None
+
+    def post_event(self, ev):
+        self._q.append(ev)
+
+    def add_timer(self, event, duration):
+        t = Timer(self, event, duration)
+        self._timers.append(t)
+        return t
+
+    def transition_to(self, new_state):
+        if self._state:
+            self._state(EXIT)
+        self._state = new_state
+        self._state(ENTRY)
+
+    def update(self):
+        for t in self._timers:
+            t.update()
+        while self._q:
+            ev = self._q.pop(0)
+            if self._state:
+                self._state(ev)
+```
+
+2. Si el botón A se presiona el semáforo debe cambiar a modo "peatonal". 
+En este modo el semáforo se pone en rojo, pero antes debe pasar por amarillo 
+para darle tiempo a los autos a detenerse.
+
+3. Si el botón B se presiona el semáforo pasa a modo nocturno. En este 
+modo el semáforo parpadea en amarillo. Si el botón A se presiona en este modo, 
+el semáforo vuelve a modo normal. 
+
+### Actividad 02
+
+Vas a modificar el código del temporizador de la unidad anterior así:
+
+1. Si está corriendo el temporizador, al presionar el botón A se debe pausar el conteo.
+Si se vuelve a presionar el botón A, el conteo se reanuda en donde se había pausado.
+
+2. Si el temporizador está corriendo, si se presiona una secuencia de botones A-B-A, 
+el temporizador debo volver a modo de configuración. 
+
+## Seek: Investigación 🔎
+
+### Actividad 03
+
+Ahora vas a implementar el temporizador en p5.js usando la técnica de máquinas de estado. 
+
+
+## Apply: Aplicación 🛠
+
+## Reflect: Consolidación y metacognición 🤔
+
