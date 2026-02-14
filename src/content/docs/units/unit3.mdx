@@ -73,15 +73,105 @@ máquinas de estado y a transferirla a p5.js.
 Regresemos a la actividad del semáforo de la unidad anterior. Te 
 pediré que hagas las siguientes modificaciones:
 
-1. Realiza un refactoring del código. Implementa la aplicación 
-usando herencia implementando la clase semáforo así:
+1. Si el botón A se presiona el semáforo debe cambiar a modo "peatonal". 
+En este modo el semáforo se pone en rojo, pero antes debe pasar por amarillo 
+para darle tiempo a los autos a detenerse.
+
+2. Si el botón B se presiona el semáforo pasa a modo nocturno. En este 
+modo el semáforo parpadea en amarillo. Si el botón A se presiona en este modo, 
+el semáforo vuelve a modo normal. 
+
+:::caution[📤 Bitácora]
+Recuerda documentar en tu bitácora de reflexión el proceso que seguiste para
+implementar estas modificaciones. Es importante que registres los pasos que diste,
+los errores que tuviste, cómo los solucionaste, y lo que aprendiste con esta actividad.
+No olvides dejar el código final que implementaste en tu bitácora.
+:::
+
+### Actividad 02
+
+Vas a modificar el código del temporizador de la unidad anterior así:
+
+1. Si está corriendo el temporizador, al presionar el botón A se debe pausar el conteo.
+Si se vuelve a presionar el botón A, el conteo se reanuda en donde se había pausado.
+
+2. Si el temporizador está corriendo, si se presiona una secuencia de botones A-B-A, 
+el temporizador debo volver a modo de configuración. 
+
+<details>
+<summary>Te dejo el proyecto base para modificar si no tienes tu propia versión</summary>
+main.py:
 
 ```py
-class Semaforo(FSMTask):
+from microbit import *
+from fsm import FSMTask, ENTRY, EXIT
+from utils import FILL
+import utime
+import music
+
+class Temporizador(FSMTask):
+    def __init__(self):
+        super().__init__()
+        self.event_queue = []
+        self.timers = []
+        self.counter = 20
+        self.myTimer = self.add_timer("Timeout",1000)
+        self.estado_actual = None
+        self.transition_to(self.estado_config)
+
+
+    def estado_config(self, ev):
+        if ev == ENTRY:
+            self.counter = 20
+            display.show(FILL[self.counter])
+            self.myTimer.start()
+        if ev == "A":
+            if self.counter > 15:
+                self.counter -= 1
+            display.show(FILL[self.counter])            
+        if ev == "B":
+            if self.counter < 25:
+                self.counter += 1
+            display.show(FILL[self.counter]) 
+        if ev == "S":
+            self.transition_to(self.estado_armed)
+
+    def estado_armed(self, ev):
+        if ev == ENTRY:
+            self.myTimer.start()
+        if ev == "Timeout":
+            if self.counter > 0:
+                self.counter -= 1
+                display.show(FILL[self.counter])
+                if self.counter == 0:
+                    self.transition_to(self.estado_timeout)    
+                else:
+                    self.myTimer.start()
+   
+    def estado_timeout(self, ev):
+        if ev == ENTRY:
+            display.show(Image.SKULL)
+            music.play(music.FUNERAL)
+        if ev == "A":
+            music.stop()
+            self.transition_to(self.estado_config)
+            
+temporizador = Temporizador()
+
+while True:
+    
+    if button_a.was_pressed(): 
+        temporizador.post_event("A")
+    if button_b.was_pressed():
+        temporizador.post_event("B")
+    if accelerometer.was_gesture("shake"):
+        temporizador.post_event("S")
+    
+    temporizador.update()
+    utime.sleep_ms(20)
 ```
 
-Recuerda que la clase `FSMTask` es la clase base para implementar máquinas de estado y 
-está en el archivo fsm.py:
+fsm.py:
 
 ```py
 import utime
@@ -141,29 +231,54 @@ class FSMTask:
                 self._state(ev)
 ```
 
-2. Si el botón A se presiona el semáforo debe cambiar a modo "peatonal". 
-En este modo el semáforo se pone en rojo, pero antes debe pasar por amarillo 
-para darle tiempo a los autos a detenerse.
+utils.py:
 
-3. Si el botón B se presiona el semáforo pasa a modo nocturno. En este 
-modo el semáforo parpadea en amarillo. Si el botón A se presiona en este modo, 
-el semáforo vuelve a modo normal. 
+```py
+from microbit import Image
 
-### Actividad 02
+def make_fill_images(on='9', off='0'):
+    imgs = []
+    for n in range(26): 
+        rows = []
+        k = 0
+        for y in range(5):
+            row = []
+            for x in range(5):
+                row.append(on if k < n else off)
+                k += 1
+            rows.append(''.join(row))
+        imgs.append(Image(':'.join(rows)))
+    return imgs
 
-Vas a modificar el código del temporizador de la unidad anterior así:
+FILL = make_fill_images()
+# Para mostrar usas display.show(FILL[n]) donde n será
+# un valor de 0 a 25
+```
 
-1. Si está corriendo el temporizador, al presionar el botón A se debe pausar el conteo.
-Si se vuelve a presionar el botón A, el conteo se reanuda en donde se había pausado.
+</details>
 
-2. Si el temporizador está corriendo, si se presiona una secuencia de botones A-B-A, 
-el temporizador debo volver a modo de configuración. 
+:::caution[📤 Bitácora]
+Recuerda documentar en tu bitácora de reflexión el proceso que seguiste para
+implementar estas modificaciones. Es importante que registres los pasos que diste,
+los errores que tuviste, cómo los solucionaste, y lo que aprendiste con esta actividad.
+No olvides dejar el código final que implementaste en tu bitácora.
+:::
 
 ## Seek: Investigación 🔎
 
 ### Actividad 03
 
-Ahora vas a implementar el temporizador en p5.js usando la técnica de máquinas de estado. 
+Ahora vamos a analizar juntos la implementación del temporizador en p5.js usando la 
+técnica de máquinas de estado. Para esto necesito que abras 
+[este](https://github.com/juanferfranco/sf1-2026-10-u3-a3) repositorio de GitHub 
+y sigamos juntos las instrucciones.
+
+:::caution[📤 Bitácora]
+Usa tu bitácora para tomar notas durante el análisis de la implementación del temporizador 
+en p5.js. Registra tus observaciones, dudas, y cualquier idea que te surja al revisar el código. 
+Esto te ayudará a consolidar tu comprensión de cómo se implementa la técnica de máquinas de estado 
+en p5.js y a prepararte para la siguiente actividad de aplicación.
+:::
 
 ## Apply: Aplicación 🛠
 
@@ -179,7 +294,35 @@ el temporizador debo volver a modo de configuración.
 además de las teclas del computador. Recuerda que solo deberás usar del micro:bit los 
 botones A y B y el acelerómetro.
 
+:::caution[📤 Bitácora]
+Registra en tu bitácora el código que implementaste para estas modificaciones tanto para 
+la parte de p5.js como para la parte del micro:bit. Documenta también el proceso que seguiste, 
+los errores que tuviste, cómo los solucionaste, y lo que aprendiste con esta actividad.
+:::
 
 
 ## Reflect: Consolidación y metacognición 🤔
+
+### Actividad 05
+
+En este punto ya tienes una aplicación de temporizador funcionando en p5.js. Para esta actividad de reflexión, 
+vas a reproducir lo que ya tienes de la actividad 4, es decir, el temporizador en p5.js con las modificaciones 
+implementadas y controlado por un micro:bit local. Ahora te pediré que te juntes con un compañero o compañera y 
+que adiciones la posibilidad de controlar el temporizador en p5.js de manera remota usado otro micro:bit. 
+Es decir, cada grupo tendrá dos micro:bits, uno para controlar el temporizador localmente y otro para 
+controlarlo de manera remota.
+
+Te pediré que NO modifiques la implementación de la máquina de estados del temporizador en p5.js. Esta deberá seguir 
+recibiendo por serial los mismos comandos que recibía antes, solo que ahora el micro:bit local se comnicará con el micro:bit remoto 
+y servirá como puente para enviar los comandos del micro:bit remoto a p5.js.
+
+¿Por dónde puedes comenzar a investigar para resolver este problema? En el editor de micro:bit ingresa a la sección Reference 
+y luego busca allí la sección Radio. Encontrarás que cada pareja de micro:bits deben definir un radio group 
+para poder comunicarse entre sí. Este radio group no puede repetirse con el de otras parejas, así que cada grupo 
+deberá elegir un número de radio group diferente.
+
+:::caution[📤 Bitácora]
+Registra en tu bitácora el código de p5.js y el de ambos micro:bits que implementaste para esta actividad. 
+Documenta también el proceso que seguiste, los errores que tuviste, cómo los solucionaste, y lo que aprendiste con esta actividad.
+:::
 
