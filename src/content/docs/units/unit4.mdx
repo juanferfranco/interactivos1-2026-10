@@ -2,3 +2,140 @@
 title: Unidad 4
 unitId: unit4
 ---
+import { Aside } from '@astrojs/starlight/components';
+
+## Introducción 📜
+
+En esta unidad vas a aprender cómo enviar líneas de texto desde el 
+micro:bit a un sketch en p5.js. Dichas líneas de textos tendrán 
+información de varios sensores del micro:bit, separada por comas, y 
+terminadas por un salto de línea.
+
+## Rúbrica de evaluación de la unidad 📝
+
+:::note[Transparencia]
+Esta rúbrica se socializa antes de la sustentación. La sustentación se 
+basa en lo presentado en la aplicación y lo documentado en la bitácora. 
+:::
+
+### Requisito de salida (condición necesaria)
+
+:::caution[Para poder cerrar la evaluación y registrar la nota]
+La **bitácora de reflexión** debe estar diligenciada antes de terminar 
+la sesión final y debe ser enseñada al profesor antes de abandonar el aula.
+La presentación de la bitácora de reflexión es un requisito indispensable 
+para montar la nota final en la plataforma académica. Si no se cumple este 
+requisito, la nota final de la unidad será 0.0.
+:::
+
+---
+
+### Rúbrica analítica
+
+:::tip[Evidencias evaluadas]
+
+1) Funcionamiento de la aplicación + documentación en bitácora.
+2) Sustentación a partir de la app y la bitácora de aplicación.
+
+:::
+
+| Criterio (peso) | Cumple plenamente (5.0) | Se cumple medianamente (4.0)| Problemas importantes (3.0)| Falta comprensión básica (2.0) | No hay evidencia (0.0)
+|---|---|---|---|---|---|
+| **1. Aplicación + bitácora (40%)** | La app se ejecuta sin fallos en el entorno acordado. Evidencia completa y verificable en bitácora. Todo consistente con lo mostrado en la demo. | La app funciona y cumple lo esencial. La bitácora permite verificar, pero hay **1–2 vacíos menores**| La app funciona parcialmente o depende de condiciones no declaradas. Bitácora con **vacíos importantes** o incompleta. | La app no corre o no demuestra lo requerido. La bitácora no permite verificación de la app.| No se entregaron evidencias o no se puede acceder a ellas |
+|Evaluación||||||
+| **2. Sustentación (60%)** | Responde a las preguntas con precisión, conectando: **(a) lo que se ve**, **(b) cómo está hecho**, y **(c) por qué**. Usa su bitácora para justificar decisiones. Reconoce límites/errores y propone cómo probar/mejorar. | Respuestas correctas pero con **imprecisiones menores** o justificación superficial. Usa parcialmente la bitácora para sustentar. | Responde solo “qué hizo” pero le cuesta explicar “cómo” o “por qué”. Necesita guía para conectar con su propia evidencia/bitácora. | No logra responder de forma coherente o responde sin relación con lo presentado/documentado. Evidencia falta de comprensión básica del trabajo entregado. | No se entregaron evidencias o no se puede acceder a ellas |
+|Evaluación||||||
+---
+
+:::tip[Cálculo de la nota]
+
+$$
+Nota = C_1*0.4  + C_2*0.6
+$$
+
+:::
+
+---
+
+## Seek: Investigación 💡
+
+Vamos a analizar un caso de estudio que te servirá de base 
+para resolver el problema que te plantearé en la fase de aplicación.
+
+### Actividad 01
+
+Vamos a explorar juntos un sitio web que muestra una serie de proyectos 
+de diseño generativo.
+
+- [Generative Design](http://www.generative-gestaltung.de/2/)
+
+:::caution[📤 Bitácora]
+Registra en tu bitácora qué trabajos te llamaron más la atención y 
+observa cómo puedes interactuar con ellos. 
+:::
+
+### Actividad 2
+
+#### Caso de estudio: exploración inicial
+
+Vamos a explorar uno de los ejemplos de diseño generativo tomado del sitio 
+[Generative Design](http://www.generative-gestaltung.de/2/).
+
+En particular será este [sketch](https://editor.p5js.org/juanferfranco/sketches/qZLVPNAHJ) 
+que analizaremos juntos y luego [modificaremos](https://editor.p5js.org/juanferfranco/sketches/6ovAtsZ10) 
+para controlarlo desde el micro:bit.
+
+:::caution[📤 Bitácora]
+Toma nota de los aspectos más relevantes que discutamos sobre el sketch.
+:::
+
+### Actividad 3
+
+#### Caso de estudio: micro:bit
+
+Una vez comprendido el funcionamiento del sketch, vamos a adaptarlo 
+para que reciba información desde el micro:bit.
+Primero te mostraré cómo transmitir información desde el micro:bit.
+
+Analicemos lentamente el siguiente código:
+
+``` py
+from microbit import *
+
+uart.init(115200)
+display.set_pixel(0,0,9)
+
+while True:
+    xValue = accelerometer.get_x()
+    yValue = accelerometer.get_y()
+    aState = button_a.is_pressed() 
+    bState = button_b.is_pressed()
+    data = "{},{},{},{}\n".format(xValue, yValue, aState,bState)
+    uart.write(data)
+    sleep(100) # Envia datos a 10 Hz
+```
+
+Probemos el programa del micro:bit con la aplicación 
+[SerialTerminal](https://juanferfranco.github.io/serialTerminal/) 
+para ver los datos que se están enviando.
+
+:::caution[📤 Bitácora]
+Toma nota de los aspectos más relevantes que discutamos sobre 
+el programa del micro:bit.
+:::
+
+### Actividad 4
+
+#### Caso de estudio: p5.js 
+
+En el siguiente repositorio encontrarás el sketch de p5.js 
+que se conecta al micro:bit y recibe los datos que este envía.
+
+:::caution[📤 Bitácora]
+Toma nota de los aspectos más relevantes que discutamos sobre el sketch.
+:::
+
+## Apply: Aplicación 🛠
+
+## Reflect: Consolidación y metacognición 🤔
+
