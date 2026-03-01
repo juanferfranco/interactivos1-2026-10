@@ -6,10 +6,9 @@ import { Aside } from '@astrojs/starlight/components';
 
 ## Introducción 📜
 
-En esta unidad vas a aprender cómo enviar líneas de texto desde el 
-micro:bit a un sketch en p5.js. Dichas líneas de textos tendrán 
-información de varios sensores del micro:bit, separada por comas, y 
-terminadas por un salto de línea.
+En esta unidad vas a aprender a construir sistemas físicos interactivos 
+integrando dispositivos de hardware que usan protocolos de comunicación 
+serial ASCII.
 
 ## Rúbrica de evaluación de la unidad 📝
 
@@ -59,45 +58,24 @@ $$
 
 ## Seek: Investigación 💡
 
-Vamos a analizar un caso de estudio que te servirá de base 
-para resolver el problema que te plantearé en la fase de aplicación.
+En esta unidad estudiaremos un caso de estudio de un sistema físico interactivo y luego 
+te pediré que apliques lo investigado y aprendido a la solución de un problema similar 
+a los que te encontrarás en el mundo real.
 
 ### Actividad 01
 
-Vamos a explorar juntos un sitio web que muestra una serie de proyectos 
-de diseño generativo.
+En esta actividad te voy a presentar el caso de estudio que vamos a analizar en esta unidad.
 
-- [Generative Design](http://www.generative-gestaltung.de/2/)
+Nos han pedido adpatar un sistema físico interactivo a una pieza de arte generativo existente. El 
+reto es adaptar el sistema para que reciba información desde un micro:bit y así controlar 
+la pieza de arte generativo.
 
-:::caution[📤 Bitácora]
-Registra en tu bitácora qué trabajos te llamaron más la atención y 
-observa cómo puedes interactuar con ellos. 
-:::
+La pieza de arte generativo que vamos a adaptar es un sketch de p5.js tomado del sitio 
+[Generative Design](http://www.generative-gestaltung.de/2/) y será 
+[esta](https://editor.p5js.org/juanferfranco/sketches/qZLVPNAHJ)
 
-### Actividad 2
-
-#### Caso de estudio: exploración inicial
-
-Vamos a explorar uno de los ejemplos de diseño generativo tomado del sitio 
-[Generative Design](http://www.generative-gestaltung.de/2/).
-
-En particular será este [sketch](https://editor.p5js.org/juanferfranco/sketches/qZLVPNAHJ) 
-que analizaremos juntos y luego [modificaremos](https://editor.p5js.org/juanferfranco/sketches/6ovAtsZ10) 
-para controlarlo desde el micro:bit.
-
-:::caution[📤 Bitácora]
-Toma nota de los aspectos más relevantes que discutamos sobre el sketch.
-:::
-
-### Actividad 3
-
-#### Caso de estudio: micro:bit
-
-Una vez comprendido el funcionamiento del sketch, vamos a adaptarlo 
-para que reciba información desde el micro:bit.
-Primero te mostraré cómo transmitir información desde el micro:bit.
-
-Analicemos lentamente el siguiente código:
+El proveedor de hardware nos ha entregado un dispositivo al que "no podemos" cambiarle el 
+firmware, pero si conocemos su protocolo de comunicación:
 
 ``` py
 from microbit import *
@@ -115,27 +93,190 @@ while True:
     sleep(100) # Envia datos a 10 Hz
 ```
 
-Probemos el programa del micro:bit con la aplicación 
-[SerialTerminal](https://juanferfranco.github.io/serialTerminal/) 
-para ver los datos que se están enviando.
+En nuestro "estudio de diseño" contamos con algunas herramientas para analizar 
+el hardware: [SerialTerminal](https://juanferfranco.github.io/serialTerminal/). 
+
+Finalmente, la infraestructura de software que tenemos para integrar el hardware con 
+la pieza de arte generativo está en [este repositorio](https://github.com/juanferfranco/sfi1-2026-20-u4-CaseStudy)
 
 :::caution[📤 Bitácora]
-Toma nota de los aspectos más relevantes que discutamos sobre 
-el programa del micro:bit.
-:::
-
-### Actividad 4
-
-#### Caso de estudio: p5.js 
-
-En el siguiente repositorio encontrarás el sketch de p5.js 
-que se conecta al micro:bit y recibe los datos que este envía.
-
-:::caution[📤 Bitácora]
-Toma nota de los aspectos más relevantes que discutamos sobre el sketch.
+Registra en tu bitácora tus observaciones a medida que vamos analizando juntos 
+el caso de estudio. Esto te ayudará a consolidar tu comprensión y a 
+tener un registro de tu proceso de aprendizaje.
 :::
 
 ## Apply: Aplicación 🛠
 
+En esta actividad vamos a simular un escenario real de trabajo en el que se nos pide 
+integrar un nuevo hardware con una pieza de arte generativo existente, pero además tenemos 
+un sistema de software ya construido que no podemos romper.
+
+### Actividad 02
+
+Te piden que construyas un sistema físico interactivo que integre el hardware 
+del caso de estudio con una pieza de arte generativo, pero esta vez el hardware 
+tiene un firmware diferente que no puedes cambiar, además debes usar la arquitectura 
+de software que ya existe.
+
+<Aside type="danger" title="">
+- Debes usar ESTRICTAMENTE la arquitectura del sistema de software que ya existe. Te dejaré una 
+guía de cómo hacerlo, pero si decides cambiar la arquitectura, tu solución NO SERÁ VÁLIDA 
+y la evaluación será 0.0, sin importar el funcionamiento de tu aplicación o la calidad de tu bitác
+</Aside>
+
+
+**La documentación del disipositivo de hardware es esta:**
+
+- El sensor envía tramas codificadas en ASCII a 115200 baudios a una frecuencia de 10 Hz.
+- Cada paquete inicia con el símbolo $ y termina con un salto de línea \n. Los valores 
+se separan por el carácter | (pipe).
+- Este es el formato: `$T:tiempo|X:acel_x|Y:acel_y|A:estado_a|B:estado_b|CHK:checksum\n`
+- Este es el diccionario de datos:
+
+    T: Timestamp en milisegundos desde el arranque del dispositivo (entero).  
+    X, Y: Valores del acelerómetro (enteros entre -2048 y 2047).  
+    A, B: Estado de los botones, 1 presionado, 0 liberado.  
+    CHK: Checksum calculable. Es un número entero de 3 dígitos que representa la suma de los 
+    valores absolutos de X, Y, A y B.  
+- Este es un ejemplo de una trama válida:
+
+    `$T:45020|X:-245|Y:12|A:1|B:0|CHK:258\n`  
+
+    (Cálculo de ejemplo: |-245| + |12| + 1 + 0 = 258)
+
+- Nota para el desarrollador: si la suma de las variables no coincide con el valor CHK, la 
+trama está corrupta y tu sistema debe descartarla silenciosamente sin actualizar la vista, pero 
+deberías registrar un mensaje de advertencia en la consola indicando que se recibió una trama corrupta.
+
+- La aplicación de arte generativo ya construida que nos entrega el equipo de diseño es esta:
+
+```js
+// Copy from P_2_0_02
+//
+// Generative Gestaltung – Creative Coding im Web
+// ISBN: 978-3-87439-902-9, First Edition, Hermann Schmidt, Mainz, 2018
+// Benedikt Groß, Hartmut Bohnacker, Julia Laub, Claudius Lazzeroni
+// with contributions by Joey Lee and Niels Poldervaart
+// Copyright 2018
+//
+// http://www.generative-gestaltung.de
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at http://www.apache.org/licenses/LICENSE-2.0
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
+function setup() {
+    createCanvas(720, 720);
+    noFill();
+    background(255);
+    strokeWeight(2);
+    stroke(0, 25);
+}
+
+function draw() {
+    if (mouseIsPressed && mouseButton == LEFT) {
+        push();
+        translate(width / 2, height / 2);
+
+        // Debe mapearse al eje Y del acelerómetro.
+        let circleResolution = int(map(mouseY + 100, 0, height, 2, 10));
+        
+        // Debe mapearse al eje X del acelerómetro.
+        let radius = mouseX - width / 2;
+        let angle = TAU / circleResolution;
+
+        // Debe ser activado por el botón B del dispositivo. 
+        if (keyIsPressed) {
+        fill(34, 45, 122, 50); 
+        } else {
+        noFill(); 
+        }
+
+        beginShape();
+        for (let i = 0; i <= circleResolution; i++) {
+        let x = cos(angle * i) * radius;
+        let y = sin(angle * i) * radius;
+        vertex(x, y);
+        }
+        endShape();
+
+        pop();
+    }
+}
+```
+
+
+#### Arquitectura del sistema: guía de integración
+
+Para resolver este caso de estudio, no basta con escribir código que funcione de forma 
+aislada. Debes entender cómo fluyen los datos en la aplicación del caso de estudio, desde el 
+hardware hasta el píxel en la pantalla. El proyecto utiliza una arquitectura desacoplada 
+estructurada en tres capas principales:
+
+1. Capa de backend: el patrón adapter (carpeta adapters)
+
+* El servidor Node.js no sabe (ni le importa) qué hardware está conectado. Únicamente espera 
+recibir un objeto de datos estandarizado.
+
+* El contrato: revisa el archivo MicrobitASCIIAdapter.js. Nota que hereda de BaseAdapter. 
+Su única responsabilidad es leer los datos de texto crudo del puerto serial, validarlo y emitir 
+un objeto JavaScript limpio mediante la llamada `this.onData?.({ x: num, y: num, btnA: bool, btnB: bool }).`
+
+* Tu reto: no debes modificar el servidor principal. Debes crear un nuevo archivo 
+(ej. MicrobitV2Adapter.js) que procese el nuevo protocolo `($T:tiempo|X:...|CHK:...\n)`, realice la operación 
+matemática del checksum para descartar tramas corruptas, y finalmente emita exactamente el mismo formato de 
+objeto JSON que el adaptador anterior. Si tu adaptador cumple el contrato, el servidor funcionará mágicamente.
+
+2. Capa de transporte: el bridge (bridgeClient.js)
+
+* Esta capa es transparente para ti. El servidor toma el objeto JSON emitido por tu Adaptador y 
+lo transmite al navegador vía WebSockets. El archivo bridgeClient.js recibe este JSON y dispara el evento 
+EVENTS.DATA. No necesitas modificar esta capa, pero debes saber que es la frontera entre Node.js y p5.js.
+
+3. Capa de frontend: máquina de estados y renderizado (sketch.js)
+
+    El equipo de diseño te entregó un código de p5.js tradicional (todo ocurre dentro de setup y draw). 
+    No puedes simplemente pegar ese código en sketch.js.
+
+    La UI de este proyecto utiliza un patrón de Máquina de Estados Finitos (FSM) gestionado en la clase 
+    PainterTask. Debes separar la lógica gráfica del prototipo que te dieron en dos partes:
+
+    * Ingesta de datos (updateLogic): aquí aterrizan los datos del hardware (ev.payload). Tu deber es 
+    escalar matemáticamente los valores crudos del acelerómetro (ej. usar map() para adecuar los rangos 
+    del protocolo a las proporciones de tu Canvas) y actualizar el estado de las variables (radios, resoluciones, colores).
+
+    * Renderizado (drawRunning): esta función equivale al draw() del prototipo original. El renderizado es 
+    "tonto"; solo debe leer las variables almacenadas en el estado (ej. mb.x, mb.btnA) y limitarse a usar las 
+    funciones de dibujo geométrico (beginShape, vertex, etc.) de p5.js.
+
+    En resumen, lo que deberás hacer es traducir la nueva trama serial a un objeto JSON usando el patrón Adapter. Luego, 
+    toma el prototipo del equipo de diseño y extrae sus variables de mouse/teclado y conéctalas a la actualización 
+    de estado (updateLogic). Traslada la lógica de dibujo poligonal dentro del estado correspondiente 
+    de la máquina de estados.
+
+
+:::caution[📤 Bitácora]
+Registra en tu bitácora la documentación necesaria para reconstruir tu solución. 
+Recuerda que el día de la sustentación tendrás que replicar tu solución y que deberás 
+estar preparado para explicar cada parte de tu solción y las decisiones que tomaste. 
+Es importante entonces que tengas un registro detalladao en tu bitácora para que 
+puedas usarlo como referencia durante la sustentación.
+:::
+
+
 ## Reflect: Consolidación y metacognición 🤔
+
+### Actividad 03
+
+:::caution[📤 Bitácora]
+Vas a construir en tu bitácora un diagrama detallado del sistema físico interactivo 
+que construiste en la actividad anterior. Este diagrama debe incluir los componentes 
+que componen el sistema, los flujos de información y las interacciones entre ellos. 
+La idea es que seas tan detallado como sea posible.
+:::
 
