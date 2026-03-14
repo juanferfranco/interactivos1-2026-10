@@ -2,3 +2,348 @@
 title: Unidad 5
 unitId: unit5
 ---
+import { Aside } from '@astrojs/starlight/components';
+
+## Introducción 📜
+
+En esta unidad vas a explorar un protocolo de comunicación serial **binario**, continuando 
+con el mismo proyecto de la unidad anterior. Vas a ver por qué los protocolos binarios son 
+relevantes: son más compactos y más eficientes, pero también más complejos de implementar. 
+La idea es que apliques lo que aprendiste sobre la arquitectura desacoplada (patrón Adapter) 
+para crear un nuevo adapter que soporte el protocolo binario, sin tocar ninguna otra capa 
+del sistema.
+
+## Rúbrica de evaluación de la unidad 📝
+
+:::note[Transparencia]
+Esta rúbrica se socializa antes de la sustentación. La sustentación se 
+basa en lo presentado en la aplicación y lo documentado en la bitácora. 
+:::
+
+### Requisito de salida (condición necesaria)
+
+:::caution[Para poder cerrar la evaluación y registrar la nota]
+La **bitácora de reflexión** debe estar diligenciada antes de terminar 
+la sesión final y debe ser enseñada al profesor antes de abandonar el aula.
+La presentación de la bitácora de reflexión es un requisito indispensable 
+para montar la nota final en la plataforma académica. Si no se cumple este 
+requisito, la nota final de la unidad será 0.0.
+:::
+
+---
+
+### Rúbrica analítica
+
+:::tip[Evidencias evaluadas]
+
+1) Funcionamiento de la aplicación + documentación en bitácora.
+2) Sustentación a partir de la app y la bitácora de aplicación.
+
+:::
+
+| Criterio (peso) | Cumple plenamente (5.0) | Se cumple medianamente (4.0)| Problemas importantes (3.0)| Falta comprensión básica (2.0) | No hay evidencia (0.0)
+|---|---|---|---|---|---|
+| **1. Aplicación + bitácora (40%)** | La app se ejecuta sin fallos en el entorno acordado. Evidencia completa y verificable en bitácora. Todo consistente con lo mostrado en la demo. | La app funciona y cumple lo esencial. La bitácora permite verificar, pero hay **1–2 vacíos menores**| La app funciona parcialmente o depende de condiciones no declaradas. Bitácora con **vacíos importantes** o incompleta. | La app no corre o no demuestra lo requerido. La bitácora no permite verificación de la app.| No se entregaron evidencias o no se puede acceder a ellas |
+|Evaluación||||||
+| **2. Sustentación (60%)** | Responde a las preguntas con precisión, conectando: **(a) lo que se ve**, **(b) cómo está hecho**, y **(c) por qué**. Usa su bitácora para justificar decisiones. Reconoce límites/errores y propone cómo probar/mejorar. | Respuestas correctas pero con **imprecisiones menores** o justificación superficial. Usa parcialmente la bitácora para sustentar. | Responde solo "qué hizo" pero le cuesta explicar "cómo" o "por qué". Necesita guía para conectar con su propia evidencia/bitácora. | No logra responder de forma coherente o responde sin relación con lo presentado/documentado. Evidencia falta de comprensión básica del trabajo entregado. | No se entregaron evidencias o no se puede acceder a ellas |
+|Evaluación||||||
+---
+
+:::tip[Cálculo de la nota]
+
+$$
+Nota = C_1*0.4  + C_2*0.6
+$$
+
+:::
+
+---
+
+## Seek: Investigación 💡
+
+### Actividad 01
+
+En esta actividad voy a guiar el análisis. Tu rol es observar, participar en la 
+discusión y registrar tus observaciones en la bitácora.
+
+#### Paso 1: Del ASCII al binario — ¿Qué cambia?
+
+Recuerda el protocolo ASCII del micro:bit que estudiamos en la unidad anterior:
+
+```py
+from microbit import *
+
+uart.init(115200)
+display.set_pixel(0,0,9)
+
+while True:
+    xValue = accelerometer.get_x()
+    yValue = accelerometer.get_y()
+    aState = button_a.is_pressed()
+    bState = button_b.is_pressed()
+    data = "{},{},{},{}\n".format(xValue, yValue, aState,bState)
+    uart.write(data)
+    sleep(100)
+```
+
+Ahora se reemplaza únicamente la línea de empaquetado por:
+
+```py
+import struct
+data = struct.pack('>2h2B', xValue, yValue, int(aState), int(bState))
+```
+
+¿Qué significa esto?
+
+- `struct.pack` empaqueta datos en formato binario compacto.
+- `'>2h2B'`: `>` = big-endian, `2h` = 2 enteros con signo de 2 bytes cada uno (xValue, yValue), 
+  `2B` = 2 bytes sin signo (aState, bState).
+- El paquete resultante tiene tamaño **fijo**: 2+2+1+1 = **6 bytes**.
+- Comparación: para enviar `xValue=500, yValue=524, aState=True, bState=False`, el protocolo ASCII 
+  produce la cadena `"500,524,True,False\n"` (~19 bytes), mientras que el protocolo binario 
+  siempre envía exactamente **6 bytes**.
+
+El código completo del micro:bit con el nuevo formato (solo datos, sin framing todavía):
+
+```py
+from microbit import *
+import struct
+
+uart.init(115200)
+display.set_pixel(0,0,9)
+
+while True:
+    xValue = accelerometer.get_x()
+    yValue = accelerometer.get_y()
+    aState = button_a.is_pressed()
+    bState = button_b.is_pressed()
+    data = struct.pack('>2h2B', xValue, yValue, int(aState), int(bState))
+    uart.write(data)
+    sleep(100)
+```
+
+:::caution[📤 Bitácora]
+Registra en tu bitácora:
+- ¿Qué ventajas y desventajas ves en usar un formato binario en lugar de texto ASCII?
+- Si xValue=500, yValue=524, aState=True, bState=False, ¿cómo se vería el paquete en hexadecimal? 
+  (Pista: convierte cada valor según su tipo y anota los bytes en orden.)
+  Respuesta esperada: `01 F4 02 0C 01 00`
+:::
+
+#### Paso 2: El problema de sincronización — ¿Por qué necesitamos framing?
+
+Si leemos 6 bytes directamente sin ningún mecanismo de sincronización, el receptor puede 
+empezar a leer a mitad de un paquete. Mira este código de lectura "sin framing":
+
+```js
+if (port.availableBytes() >= 6) {
+    let data = port.readBytes(6);
+    if (data) {
+        const buffer = new Uint8Array(data).buffer;
+        const view = new DataView(buffer);
+        microBitX = view.getInt16(0);
+        microBitY = view.getInt16(2);
+        microBitAState = view.getUint8(4) === 1;
+        microBitBState = view.getUint8(5) === 1;
+        updateButtonStates(microBitAState, microBitBState);
+
+        print(`microBitX: ${microBitX} microBitY: ${microBitY} microBitAState: ${microBitAState} microBitBState: ${microBitBState} \n`);
+    }
+}
+```
+
+Este código puede producir salidas como esta:
+
+```
+Connected to serial port
+A pressed
+microBitX: 500 microBitY: 524 microBitAState: true microBitBState: false
+
+Microbit ready to draw
+92 microBitX: 500 microBitY: 524 microBitAState: true microBitBState: false
+
+microBitX: 500 microBitY: 513 microBitAState: false microBitBState: false
+
+222 microBitX: 3073 microBitY: 1 microBitAState: false microBitBState: false
+```
+
+¿Por qué ocurre esto?
+
+- La comunicación serial es un **flujo continuo de bytes**, sin fronteras entre paquetes.
+- Sin delimitadores, si se pierde o llega un byte extra al conectarse, la lectura se desalinea.
+- Los bytes de un paquete se mezclan con los del siguiente.
+- Valores absurdos como `microBitX: 3073` o `microBitY: 513` son el resultado de interpretar 
+  bytes de dos paquetes distintos como si fueran uno solo.
+
+¿Qué es **framing** y por qué lo necesitamos?
+
+- **Sincronización**: un byte de inicio (header) marca dónde comienza cada paquete.
+- **Integridad**: un checksum verifica que los datos no están corruptos.
+- **Robustez**: si el receptor recibe datos residuales al conectarse, puede descartar bytes 
+  hasta encontrar un paquete válido.
+
+:::caution[📤 Bitácora]
+Registra en tu bitácora:
+- ¿Por qué el protocolo ASCII de la unidad anterior no tenía este problema de sincronización? 
+  (Pista: piensa en qué rol cumplía el carácter `\n`.)
+- ¿Por qué en binario no podemos usar `\n` como delimitador?
+:::
+
+#### Paso 3: El protocolo binario final con framing
+
+El protocolo final usa un paquete de **8 bytes** con la siguiente estructura:
+
+| Byte | Contenido | Descripción |
+|------|-----------|-------------|
+| 0 | `0xAA` | Byte de sincronización (header) |
+| 1–2 | `int16 BE` | Valor del acelerómetro X (big-endian, con signo) |
+| 3–4 | `int16 BE` | Valor del acelerómetro Y (big-endian, con signo) |
+| 5 | `uint8` | Estado del botón A (1 = presionado, 0 = liberado) |
+| 6 | `uint8` | Estado del botón B (1 = presionado, 0 = liberado) |
+| 7 | `uint8` | Checksum: `(suma de bytes 1 a 6) % 256` |
+
+El código final del micro:bit:
+
+```py
+from microbit import *
+import struct
+
+uart.init(115200)
+display.set_pixel(0, 0, 9)
+
+while True:
+    xValue = accelerometer.get_x()
+    yValue = accelerometer.get_y()
+    aState = button_a.is_pressed()
+    bState = button_b.is_pressed()
+    data = struct.pack('>2h2B', xValue, yValue, int(aState), int(bState))
+    checksum = sum(data) % 256
+    packet = b'\xAA' + data + bytes([checksum])
+    uart.write(packet)
+    sleep(100)
+```
+
+¿Qué hace cada línea del framing?
+
+- `checksum = sum(data) % 256`: suma todos los bytes de datos y lo ajusta a 1 byte (0–255).
+- `packet = b'\xAA' + data + bytes([checksum])`: concatena header + datos + checksum.
+
+La lógica del receptor debe:
+1. Acumular bytes en un buffer.
+2. Buscar el byte `0xAA` al inicio del buffer.
+3. Si el primer byte NO es `0xAA`, descartarlo y seguir buscando.
+4. Si hay al menos 8 bytes y el primero es `0xAA`: extraer el paquete.
+5. Calcular el checksum sobre los bytes 1–6 y comparar con el byte 7.
+6. Si coincide: extraer los valores con `DataView` o `Buffer.readInt16BE`.
+7. Si no coincide: descartar el byte `0xAA` y seguir buscando (era un falso positivo).
+
+:::caution[📤 Bitácora]
+Registra en tu bitácora:
+- ¿Cuántos bytes tiene el paquete completo con framing? ¿Cuántos más que sin framing?
+- ¿Qué pasa si un byte de datos tiene el valor `0xAA` (170 en decimal)? ¿Podría el receptor 
+  confundirlo con un header? ¿Cómo ayuda el checksum en este caso?
+:::
+
+---
+
+## Apply: Aplicación 🛠
+
+### Actividad 02
+
+El proveedor de hardware ha actualizado el firmware del dispositivo para enviar datos usando el 
+protocolo serial binario que analizamos en la actividad anterior. Como en la unidad anterior, 
+no puedes cambiar el firmware. Tu tarea es crear un nuevo adaptador que soporte este protocolo 
+sin modificar ninguna otra parte del sistema.
+
+<Aside type="danger" title="">
+- Debes usar ESTRICTAMENTE la arquitectura del sistema de software que ya existe.
+- No debes modificar `bridgeServer.js` excepto para descomentar/añadir la línea de importación 
+  de tu nuevo adapter y añadir el caso `"microbitBinary"` en la función `createAdapter()`.
+- No debes modificar `sketch.js`, `bridgeClient.js`, `fsm.js`, ni `BaseAdapter.js`.
+</Aside>
+
+**La documentación del dispositivo de hardware es esta:**
+
+- El sensor envía paquetes binarios a 115200 baudios a una frecuencia de 10 Hz.
+- Estructura del paquete (8 bytes):
+
+  | Byte | Contenido | Descripción |
+  |------|-----------|-------------|
+  | 0 | `0xAA` | Byte de sincronización (header) |
+  | 1–2 | `int16 BE` | Valor del acelerómetro X (-2048 a 2047) |
+  | 3–4 | `int16 BE` | Valor del acelerómetro Y (-2048 a 2047) |
+  | 5 | `uint8` | Estado del botón A (1 = presionado, 0 = liberado) |
+  | 6 | `uint8` | Estado del botón B (1 = presionado, 0 = liberado) |
+  | 7 | `uint8` | Checksum: `(suma de bytes 1 a 6) % 256` |
+
+- Si el checksum calculado no coincide con el recibido, la trama está corrupta y debe descartarse. 
+  Se debe registrar un mensaje de advertencia en la consola.
+
+- Ejemplo de paquete válido (en hexadecimal):  
+  `AA 01 F4 02 0C 01 00 FE`
+
+  Donde: xValue=500 (`01 F4`), yValue=524 (`02 0C`), btnA=true (`01`), btnB=false (`00`),  
+  checksum = `(0x01+0xF4+0x02+0x0C+0x01+0x00) % 256 = 0xFE` (254).
+
+**Qué debes implementar:**
+
+1. Crear el archivo `adapters/MicrobitBinaryAdapter.js` en el repositorio del caso de estudio que:
+   - Herede de `BaseAdapter`.
+   - Abra el puerto serial.
+   - Acumule bytes entrantes en un buffer.
+   - Implemente la lógica de framing: buscar el header `0xAA` y verificar el checksum.
+   - Emita `this.onData?.({ x, y, btnA, btnB })` cuando reciba un paquete válido.
+   - El contrato de salida es **idéntico** al del `MicrobitASCIIAdapter.js`.
+
+2. Registrar el adapter en `bridgeServer.js`:
+   - Descomentar/añadir la línea de importación del nuevo adapter.
+   - Añadir un caso `"microbitBinary"` en la función `createAdapter()` que instancie tu nuevo adapter.
+
+3. Probar el sistema completo:
+   - Flashear el micro:bit con el firmware binario (proporcionado por el profesor).
+   - Ejecutar: `node bridgeServer.js --device microbitBinary --wsPort 8081`
+   - Verificar que el sketch funciona correctamente con los datos del micro:bit.
+
+**Pista para la implementación:**
+
+Observa cómo `MicrobitASCIIAdapter.js` acumula texto en un string buffer y busca el carácter 
+`\n` para delimitar líneas. Tu adapter debe hacer lo análogo pero con bytes: acumular en un 
+`Buffer` de Node.js, buscar el byte `0xAA`, y cuando tengas al menos 8 bytes verificar el 
+checksum antes de parsear.
+
+:::caution[📤 Bitácora]
+Documenta en tu bitácora todo el proceso de construcción: las pruebas intermedias, los errores 
+que encontraste y cómo los solucionaste. Incluye evidencia de que tu sistema funciona: capturas 
+de consola mostrando datos válidos, y si es posible, capturas de errores de checksum detectados 
+y descartados correctamente.
+:::
+
+---
+
+## Reflect: Consolidación y metacognición 🤔
+
+### Actividad 03
+
+:::caution[📤 Bitácora]
+Responde en tu bitácora las siguientes preguntas:
+
+1. Realiza una tabla comparativa entre el adapter ASCII que creaste en la Unidad 4 
+   (`MicrobitV2Adapter.js`) y el adapter binario de esta unidad (`MicrobitBinaryAdapter.js`). 
+   Compara al menos:
+   - Tamaño de cada paquete en bytes.
+   - Mecanismo de delimitación/framing.
+   - Mecanismo de verificación de integridad (checksum).
+   - Complejidad de implementación del parser.
+   - Facilidad de depuración (¿cuál es más fácil de leer con un terminal serial?).
+
+2. ¿Por qué la arquitectura desacoplada (patrón Adapter + Bridge + FSM) te permite añadir 
+   soporte para un protocolo completamente diferente sin modificar el frontend (`sketch.js`) 
+   ni el transporte (`bridgeClient.js`)?
+
+3. ¿En qué situaciones del mundo real preferirías un protocolo binario sobre uno ASCII y 
+   viceversa? Justifica con ejemplos concretos.
+
+4. Actualiza el diagrama de flujo de datos de la Unidad 4 para reflejar el protocolo binario. 
+   ¿Qué componentes cambiaron? ¿Qué componentes permanecieron intactos?
+:::
+
