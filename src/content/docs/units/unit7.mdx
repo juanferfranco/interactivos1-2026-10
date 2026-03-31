@@ -2,3 +2,337 @@
 title: Unidad 7
 unitId: unit7
 ---
+import { Aside } from '@astrojs/starlight/components';
+
+## Introducción 📜
+
+En esta unidad vas a continuar extendiendo el sistema audiovisual que vienes
+construyendo desde las unidades 4, 5 y 6. En la unidad anterior integraste una
+fuente de eventos musicales temporizados con Strudel. Ahora vas a añadir una
+nueva fuente de datos que no dispara eventos rítmicos, sino que modifica
+parámetros persistentes del sistema en tiempo real usando Open Stage Control.
+
+El reto de esta unidad no es solamente "poner sliders" o "cambiar colores". El
+reto real es integrar una segunda fuente de entrada sobre el mismo sistema sin
+romper la arquitectura desacoplada que ya construiste. En otras palabras, ahora
+tu sistema debe ser capaz de convivir con dos lógicas distintas al mismo tiempo:
+
+- Eventos musicales que ocurren en instantes específicos;
+- Controles que cambian el estado visual del sistema y permanecen activos hasta
+  que algo vuelva a modificarlos.
+
+Como en las unidades anteriores, esta extensión no debe ocurrir metiendo lógica
+de dominio dentro del bridge. Debe ocurrir mediante nuevos **adapters** que
+traducen las fuentes externas y se conectan a `bridgeServer.js`.
+
+## Rúbrica de evaluación de la unidad 📝
+
+:::note[Transparencia]
+Esta rúbrica se socializa antes de la sustentación. La sustentación se
+basa en lo presentado en la aplicación y lo documentado en la bitácora.
+:::
+
+### Requisito de salida (condición necesaria)
+
+:::caution[Para poder cerrar la evaluación y registrar la nota]
+La **bitácora de reflexión** debe estar diligenciada antes de terminar
+la sesión final y debe ser enseñada al profesor antes de abandonar el aula.
+La presentación de la bitácora de reflexión es un requisito indispensable
+para montar la nota final en la plataforma académica. Si no se cumple este
+requisito, la nota final de la unidad será 0.0.
+:::
+
+---
+
+### Rúbrica analítica
+
+:::tip[Evidencias evaluadas]
+
+1) Funcionamiento de la aplicación + documentación en bitácora.
+2) Sustentación a partir de la app y la bitácora de aplicación.
+
+:::
+
+| Criterio (peso) | Cumple plenamente (5.0) | Se cumple medianamente (4.0)| Problemas importantes (3.0)| Falta comprensión básica (2.0) | No hay evidencia (0.0)
+|---|---|---|---|---|---|
+| **1. Aplicación + bitácora (40%)** | La app se ejecuta sin fallos en el entorno acordado. Integra correctamente Strudel y Open Stage Control. Los controles modifican parámetros visuales de manera consistente y la bitácora permite reconstruir el flujo completo del sistema. | La app funciona y evidencia la integración básica de ambas fuentes de datos. La bitácora permite verificar lo esencial, aunque hay **1–2 vacíos menores**. | La app funciona parcialmente, algunos controles no afectan el sistema de forma clara o la arquitectura no está bien documentada. La bitácora tiene **vacíos importantes**. | La app no corre o no demuestra la integración pedida. La bitácora no permite verificar cómo se implementó la solución. | No se entregaron evidencias o no se puede acceder a ellas |
+|Evaluación||||||
+| **2. Sustentación (60%)** | Responde con precisión explicando cómo conviven los eventos temporizados de Strudel y los controles persistentes de Open Stage Control dentro del mismo sistema. Justifica decisiones de arquitectura y de diseño visual. | Responde correctamente pero con **imprecisiones menores** o con justificación superficial de algunos componentes. | Explica parcialmente el sistema, pero le cuesta distinguir entre evento y estado, o entre transporte y actualización de parámetros. | No logra explicar de forma coherente el flujo de datos o confunde el papel de las capas del sistema. | No se entregaron evidencias o no se puede acceder a ellas |
+|Evaluación||||||
+
+---
+
+:::tip[Cálculo de la nota]
+
+$$
+Nota = C_1*0.4  + C_2*0.6
+$$
+
+:::
+
+---
+
+## Seek: Investigación 💡
+
+### Actividad 01
+
+En esta actividad vamos a estudiar un caso de integración entre el sistema de la
+unidad 6 y una nueva superficie de control construida con Open Stage Control.
+
+El caso de estudio parte del sistema audiovisual anterior y le añade una
+capacidad nueva: modificar uno de los colores de las visuales en tiempo real
+desde una interfaz externa.
+
+[En este caso de estudio](https://github.com/juanferfranco/openStageControl-sfi1-2026-10):
+
+1. Open Stage Control envía mensajes OSC por UDP.
+2. Un Adapter recibe esos mensajes y los normaliza.
+3. `bridgeServer.js` retransmite la información por WebSocket.
+4. La app visual actualiza un parámetro persistente de su estado.
+
+La meta no es copiar el experimento, sino entender qué problema arquitectónico
+resuelve y cómo se relaciona con lo ya trabajado en las unidades anteriores.
+
+:::caution[📤 Bitácora]
+Registra en tu bitácora:
+- ¿Qué diferencia hay entre un evento musical y un mensaje de control?
+- ¿Qué quiere decir que un parámetro del sistema sea persistente?
+- ¿Qué partes del sistema de la unidad 6 permanecen intactas en este nuevo caso?
+:::
+
+#### Paso 1: La nueva fuente de datos
+
+En la unidad 6 usaste Strudel como fuente de eventos musicales. En esta unidad
+vas a añadir Open Stage Control como una fuente de control paramétrico.
+
+Eso significa que ahora el sistema debe convivir con dos clases de entrada:
+
+- `strudel`: eventos que suceden en un momento específico;
+- `osc`: mensajes que modifican variables del sistema y permanecen activas hasta
+  una nueva actualización.
+
+Por ejemplo, un mensaje OSC puede verse así:
+
+```js
+{
+  address: "/rgb_1",
+  args: [255, 120, 30]
+}
+```
+
+Este mensaje no significa "dibuja algo ya". Significa más bien:
+
+> "a partir de ahora, este parámetro del sistema debe tomar este valor".
+
+:::caution[📤 Bitácora]
+Registra en tu bitácora:
+- Si Open Stage Control fuera "el dispositivo" de esta unidad, ¿Cuál sería su protocolo?
+- ¿Qué parte de ese protocolo te interesa conservar y cuál te gustaría normalizar?
+:::
+
+#### Paso 2: Del mensaje OSC al estado visual
+
+En el caso de estudio, un widget RGB de Open Stage Control envía tres valores y
+el sistema visual los usa para modificar el color asociado a una familia de
+eventos.
+
+Esto introduce una distinción clave:
+
+- Strudel alimenta una cola de eventos temporizados.
+- Open Stage Control actualiza el estado de control del sistema.
+
+Eso significa que no todos los mensajes deben tratarse igual.
+
+Si un mensaje de Strudel llegara sin `timestamp`, perderías sincronización.
+Si un mensaje de Open Stage Control se tratara como un "disparo" temporal,
+perderías la idea de parámetro persistente.
+
+:::caution[📤 Bitácora]
+Registra en tu bitácora:
+- ¿Por qué no conviene procesar un mensaje OSC igual que un mensaje de Strudel?
+- ¿Qué variables del sistema deberían vivir como estado persistente y no como evento efímero?
+:::
+
+#### Paso 3: Continuidad con las unidades 4, 5 y 6
+
+Aunque la tecnología cambie, la lógica de diseño del curso sigue siendo la
+misma:
+
+1. existe una fuente externa de datos;
+2. esos datos deben traducirse a una forma útil para el sistema;
+3. esa traducción debe encapsularse en un **adapter**;
+4. hay una capa de transporte;
+5. hay una capa de estado;
+6. hay una capa de renderizado.
+
+Ahora lo interesante es que el sistema ya no tiene una sola fuente de datos. Tiene
+dos fuentes con semánticas distintas.
+
+En otras palabras:
+
+- En la unidad 4 y 5 cambió el protocolo del hardware.
+- En la unidad 6 apareció una app generativa con eventos temporizados.
+- En esta unidad aparece una segunda app que no produce eventos musicales, sino
+  parámetros de control.
+
+:::caution[📤 Bitácora]
+Registra en tu bitácora:
+- ¿Qué componentes de la arquitectura necesitas conservar obligatoriamente?
+- ¿Qué nuevas estructuras de estado necesitas introducir para soportar control paramétrico?
+:::
+
+---
+
+## Apply: Aplicación 🛠
+
+### Actividad 02
+
+Debes extender tu proyecto de la unidad 6 para incorporar Open Stage Control
+como una segunda fuente de datos.
+
+Tu sistema debe conservar la lógica musical y visual de la unidad anterior, pero
+ahora además debe permitir modificar parámetros visuales en tiempo real mediante
+controles externos.
+
+<Aside type="danger" title="">
+- Debes usar ESTRICTAMENTE la arquitectura del sistema de software que ya existe.
+- Debes extender el sistema mediante un nuevo **Adapter** conectado a `bridgeServer.js`.
+- No debes resolver el problema conectando controles directamente a funciones de dibujo sueltas.
+- No debes romper la lógica de sincronización temporal que ya construiste en la unidad 6.
+- Debes separar claramente la entrada de mensajes, la normalización, la actualización del estado y el renderizado.
+</Aside>
+
+**La documentación funcional del sistema es esta:**
+
+- Strudel sigue enviando eventos musicales al sistema.
+- Open Stage Control envía mensajes OSC por UDP.
+- Un Adapter de Open Stage Control recibe esos mensajes, los normaliza y se los entrega a `bridgeServer.js`.
+- La aplicación visual recibe ambos tipos de mensaje.
+- El sistema debe distinguir entre:
+  - eventos temporizados;
+  - mensajes de control persistente.
+
+**Ejemplo de mensaje OSC recibido por el bridge:**
+
+```js
+{
+  address: "/rgb_1",
+  args: [255, 120, 30]
+}
+```
+
+**Qué debes implementar:**
+
+1. Ejecutar y analizar el caso de estudio basado en Open Stage Control.
+
+2. Crear un nuevo Adapter para Open Stage Control, por ejemplo `OpenStageControlAdapter.js`, que:
+   - reciba los mensajes OSC entrantes;
+   - los normalice a un formato claro para el sistema;
+   - entregue esos mensajes normalizados a `bridgeServer.js`.
+
+3. Registrar ese Adapter en `bridgeServer.js` sin convertir el bridge en el lugar donde vive la lógica de dominio.
+
+4. Diseñar un formato claro para los mensajes de control que viajarán dentro de tu sistema.
+
+5. Añadir al menos **tres controles diferentes** de Open Stage Control para modificar **tres parámetros diferentes** de tus visuales.
+
+6. Actualizar la capa de estado de tu frontend para que esos controles modifiquen el comportamiento visual sin romper la lógica de eventos de Strudel.
+
+**Contrato mínimo sugerido para los mensajes de control normalizados:**
+
+```js
+{
+  type: "osc",
+  payload: {
+    address: "/rgb_1",
+    args: [255, 120, 30]
+  }
+}
+```
+
+No es obligatorio usar exactamente este contrato, pero tu sistema debe tener un
+formato estable, explícito y fácil de explicar en la sustentación.
+
+**Requisito mínimo funcional**
+
+Debes implementar al menos tres controles distintos de Open Stage Control que
+afecten tres parámetros visuales distintos.
+
+Se recomienda que no sean tres controles equivalentes. Por ejemplo:
+
+- un control `rgb` para color;
+- un `slider` para tamaño, intensidad o duración visual;
+- un `toggle`, `button` o `menu` para activar o desactivar una capa, modo o comportamiento visual.
+
+**Exploración opcional**
+
+Si quieres llevar tu propuesta más lejos, puedes integrar:
+
+- Múltiples superficies de control;
+- Parámetros diferentes para familias sonoras diferentes;
+- Modos de composición visual seleccionables desde interfaz;
+- Controles que afecten composición, opacidad, escala, densidad o persistencia;
+- Una interfaz de control pensada como instrumento performático y no solo como panel técnico.
+
+**Pista de implementación**
+
+En esta unidad conviene pensar el sistema como dos flujos que se encuentran en la
+capa de estado:
+
+- `strudel` actualiza la cola de eventos y activa animaciones en tiempos específicos;
+- `osc` actualiza variables persistentes del sistema;
+- El render final utiliza ambos tipos de información al mismo tiempo.
+
+Esto significa que Open Stage Control no debe reemplazar a Strudel. Debe convivir
+con él.
+Además, esa convivencia debe comenzar en el backend mediante adapters
+independientes, no mezclando toda la lógica dentro de `bridgeServer.js`.
+
+:::caution[📤 Bitácora]
+Documenta en tu bitácora:
+- Cómo configuraste Open Stage Control;
+- Qué widgets decidiste usar y por qué;
+- Qué estructura final de mensaje decidiste usar para los controles;
+- Cómo integraste ambas fuentes de datos en el mismo frontend;
+- Qué pruebas hiciste para verificar que el control paramétrico funciona sin romper la sincronización de Strudel;
+- Qué problemas encontraste y cómo los solucionaste.
+:::
+
+---
+
+## Reflect: Consolidación y metacognición 🤔
+
+### Actividad 03
+
+:::caution[📤 Bitácora]
+Responde en tu bitácora las siguientes preguntas:
+
+1. Realiza un diagrama detallado del flujo de datos completo de tu sistema. Debe incluir al menos:
+   - Strudel;
+   - Open Stage Control;
+   - Adapter de Strudel;
+   - Adapter de Open Stage Control;
+   - `bridgeServer.js`;
+   - `bridgeClient.js` o cliente equivalente;
+   - Cola de eventos;
+   - Estado persistente de controles;
+   - Render visual.
+
+2. Compara en una tabla las fuentes de datos que has trabajado en las unidades 4, 5, 6 y 7. Compara al menos:
+   - Fuente de datos;
+   - Formato del mensaje;
+   - Tipo de dato que produce;
+   - Problema técnico principal;
+   - Lugar donde ocurre la traducción del dato;
+   - Papel del tiempo;
+   - Relación con el estado del sistema.
+
+3. Explica por qué Open Stage Control no debe tratarse igual que Strudel dentro de la arquitectura.
+
+4. Justifica los tres controles que elegiste:
+   - Qué parámetro modifican;
+   - Por qué ese parámetro es relevante;
+   - Cómo se refleja en el comportamiento visual.
+
+5. Si tuvieras que integrar una tercera fuente de control en el futuro, ¿Qué partes de tu arquitectura actual conservarías y cuáles extenderías?
+:::

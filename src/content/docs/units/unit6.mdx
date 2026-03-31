@@ -13,9 +13,10 @@ eventos musicales en tiempo real usando Strudel.
 
 El reto ya no consiste solamente en lograr que "dos cosas se comuniquen". El
 reto real es mantener una arquitectura desacoplada, clara y explicable, en la
-que cada capa conserve su responsabilidad: una aplicación genera eventos, el
-bridge los transporta, y el frontend los interpreta y los convierte en una
-respuesta visual sincronizada en el tiempo.
+que cada capa conserve su responsabilidad: una aplicación genera eventos, un
+adapter los traduce a un contrato estable, `bridgeServer.js` los transporta, y
+el frontend los interpreta y los convierte en una respuesta visual sincronizada
+en el tiempo.
 
 ## Rúbrica de evaluación de la unidad 📝
 
@@ -86,6 +87,8 @@ ejecutan apenas llegan por WebSocket, sino cuando el reloj local alcanza el
 Esto introduce una idea nueva para el curso:
 
 - En las unidades 4 y 5 el reto principal era **parsear y validar** datos.
+- En las unidades 4 y 5 esto se resolvía creando nuevos **adapters** sin romper
+  el resto del sistema.
 - En esta unidad también debes **programar cuándo** ocurre la respuesta visual.
 
 :::caution[📤 Bitácora]
@@ -175,8 +178,9 @@ la misma:
 
 1. Existe una fuente externa de datos;
 2. Esos datos deben traducirse a una forma comprensible por el sistema;
-3. Hay una capa de transporte;
-4. Hay una capa de frontend que convierte eventos en estado y luego en imagen.
+3. Esa traducción debe encapsularse en un **adapter**;
+4. Hay una capa de transporte;
+5. Hay una capa de frontend que convierte eventos en estado y luego en imagen.
 
 En otras palabras:
 
@@ -187,7 +191,7 @@ En otras palabras:
 :::caution[📤 Bitácora]
 Registra en tu bitácora:
 - ¿Qué papel cumple el Adapter en U4 y U5?
-- ¿Qué pieza equivalente necesitas ahora para que los eventos de Strudel no entren "crudos" al sistema visual?
+- ¿Qué Adapter necesitas ahora para que los eventos de Strudel no entren "crudos" al sistema visual?
 :::
 
 ---
@@ -203,6 +207,7 @@ desarrollando desde las unidades anteriores.
 
 <Aside type="danger" title="">
 - Debes usar ESTRICTAMENTE la arquitectura del sistema de software que ya existe.
+- Debes extender el sistema mediante un nuevo **Adapter** conectado a `bridgeServer.js`.
 - No debes convertir `bridgeServer.js` en un lugar de lógica visual o musical compleja.
 - No debes disparar la visualización directamente desde el callback del WebSocket.
 - Debes separar claramente: recepción del mensaje, normalización de datos, programación temporal y renderizado.
@@ -213,7 +218,8 @@ desarrollando desde las unidades anteriores.
 - La aplicación de Strudel corre en el navegador.
 - Strudel envía eventos por WebSocket al puerto `8080`.
 - Cada evento contiene información musical y una marca temporal `timestamp`.
-- El bridge recibe estos mensajes y debe reenviarlos a la aplicación visual.
+- Un Adapter debe recibir estos mensajes, normalizarlos y entregarlos a `bridgeServer.js`.
+- El bridge debe reenviarlos a la aplicación visual.
 - La aplicación visual debe responder de forma sincronizada con el tiempo indicado por el evento.
 
 **Ejemplo de mensaje de entrada al bridge:**
@@ -236,16 +242,18 @@ desarrollando desde las unidades anteriores.
 
 1. Integrar una configuración de Strudel que emita eventos musicales por WebSocket hacia el puerto `8080`.
 
-2. Crear un nuevo Adapter para el `bridgeServer.js` para que:
+2. Crear un nuevo Adapter para Strudel, por ejemplo `StrudelAdapter.js`, que:
    - Reciba los eventos entrantes desde Strudel;
    - Los normalice a un formato claro para el sistema;
-   - Los reenvíe al cliente visual sin decidir cómo se dibujan.
+   - Los entregue a `bridgeServer.js` sin decidir cómo se dibujan.
 
-3. Adaptar `bridgeClient.js` para que:
+3. Registrar ese Adapter en `bridgeServer.js` sin convertir el bridge en el lugar donde vive la lógica de dominio.
+
+4. Adaptar `bridgeClient.js` para que:
    - Reciba los eventos reenviados;
    - Dispare el evento correspondiente hacia la capa de frontend.
 
-4. Implementar en el frontend una lógica que:
+5. Implementar en el frontend una lógica que:
    - Reciba eventos musicales;
    - Los almacene en una cola;
    - Los active cuando llegue su `timestamp`;
@@ -298,7 +306,8 @@ Si quieres llevar tu propuesta más lejos, puedes integrar:
 En las unidades 4 y 5 aprendiste que no conviene mezclar la lectura del protocolo
 con la lógica visual. Aquí ocurre lo mismo:
 
-- El bridge no debe decidir colores, formas o composiciones;
+- El Adapter debe traducir y normalizar el mensaje de Strudel;
+- `bridgeServer.js` no debe decidir colores, formas o composiciones;
 - El frontend no debería interpretar mensajes WebSocket desordenados o ambiguos;
 - La capa de estado debe convertir el evento musical en variables visuales y luego
   el render debe limitarse a dibujar.
@@ -323,12 +332,13 @@ Responde en tu bitácora las siguientes preguntas:
 
 1. Realiza un diagrama detallado del flujo de datos de tu sistema. Debe incluir al menos:
    - Strudel;
+   - Adapter de Strudel;
    - WebSocket de salida;
    - `bridgeServer.js`;
    - `bridgeClient.js`;
-   - cola de eventos;
+   - Cola de eventos;
    - FSM o capa de estado;
-   - render visual.
+   - Render visual.
 
 2. Compara las unidades 4, 5 y 6 en una tabla. Compara al menos:
    - Fuente de datos;
