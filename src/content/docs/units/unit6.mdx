@@ -259,6 +259,34 @@ desarrollando desde las unidades anteriores.
    - Los active cuando llegue su `timestamp`;
    - Traduzca esos eventos en una respuesta visual coherente.
 
+#### Arquitectura del frontend: guía de integración
+
+En esta unidad no basta con "hacer que algo se vea". Debes respetar la
+arquitectura del frontend que ya vienes trabajando.
+
+1. `bridgeClient.js`
+   - Recibe el mensaje normalizado reenviado por `bridgeServer.js`;
+   - Inspecciona `msg.type`;
+   - Dispara el evento correspondiente hacia la FSM.
+
+2. `FSMTask`
+   - Recibe eventos ya normalizados;
+   - No debe parsear mensajes crudos de Strudel;
+   - Coordina la actualización de estado y la ejecución del render.
+
+3. `updateLogic`
+   - Aquí aterrizan los datos del evento musical;
+   - Aquí debes actualizar la cola de eventos temporizados;
+   - Aquí debes traducir el mensaje a variables de estado visual.
+
+4. `drawRunning`
+   - Aquí no debes parsear mensajes de red;
+   - Aquí no debes decidir cómo interpretar `msg.type`;
+   - Aquí solo debes leer el estado ya calculado y dibujar.
+
+En otras palabras: `bridgeClient.js` recibe, `FSMTask` organiza,
+`updateLogic` actualiza estado y `drawRunning` dibuja.
+
 **Contrato mínimo sugerido para el evento normalizado:**
 
 ```js
@@ -316,6 +344,7 @@ con la lógica visual. Aquí ocurre lo mismo:
 Documenta en tu bitácora:
 - Cómo configuraste Strudel para emitir eventos;
 - Qué estructura final de mensaje decidiste usar;
+- Cómo conectaste `bridgeClient.js`, `FSMTask`, `updateLogic` y `drawRunning`;
 - Cómo separaste recepción, cola temporal y renderizado;
 - Qué pruebas hiciste para verificar la sincronización;
 - Qué problemas encontraste y cómo los solucionaste.

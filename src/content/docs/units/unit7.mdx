@@ -238,6 +238,37 @@ controles externos.
 
 6. Actualizar la capa de estado de tu frontend para que esos controles modifiquen el comportamiento visual sin romper la lógica de eventos de Strudel.
 
+#### Arquitectura del frontend: guía de integración
+
+En esta unidad el frontend debe ser capaz de recibir y organizar dos tipos de
+entrada distintos: eventos temporizados de Strudel y controles persistentes de
+Open Stage Control.
+
+1. `bridgeClient.js`
+   - Recibe los mensajes reenviados por `bridgeServer.js`;
+   - Distingue entre `msg.type === "strudel"` y `msg.type === "osc"`;
+   - Dispara el evento correspondiente hacia la FSM.
+
+2. `FSMTask`
+   - Recibe eventos ya normalizados;
+   - No debe parsear mensajes crudos de Strudel ni de OSC;
+   - Coordina la actualización del estado musical y del estado de controles.
+
+3. `updateLogic`
+   - Aquí aterrizan los datos de ambos tipos de mensaje;
+   - Los eventos de Strudel deben actualizar la cola temporal;
+   - Los mensajes OSC deben actualizar variables persistentes del sistema;
+   - Aquí debes traducir ambos flujos a estado visual coherente.
+
+4. `drawRunning`
+   - Aquí no debes interpretar mensajes de red;
+   - Aquí no debes conectar widgets directamente al dibujo;
+   - Aquí solo debes leer el estado ya calculado y dibujar usando tanto los
+     eventos activos como los parámetros persistentes.
+
+En otras palabras: `bridgeClient.js` recibe, `FSMTask` organiza,
+`updateLogic` actualiza estado y `drawRunning` dibuja.
+
 **Contrato mínimo sugerido para los mensajes de control normalizados:**
 
 ```js
@@ -260,9 +291,9 @@ afecten tres parámetros visuales distintos.
 
 Se recomienda que no sean tres controles equivalentes. Por ejemplo:
 
-- un control `rgb` para color;
-- un `slider` para tamaño, intensidad o duración visual;
-- un `toggle`, `button` o `menu` para activar o desactivar una capa, modo o comportamiento visual.
+- Un control `rgb` para color;
+- Un `slider` para tamaño, intensidad o duración visual;
+- Un `toggle`, `button` o `menu` para activar o desactivar una capa, modo o comportamiento visual.
 
 **Exploración opcional**
 
@@ -293,6 +324,7 @@ Documenta en tu bitácora:
 - Cómo configuraste Open Stage Control;
 - Qué widgets decidiste usar y por qué;
 - Qué estructura final de mensaje decidiste usar para los controles;
+- Cómo conectaste `bridgeClient.js`, `FSMTask`, `updateLogic` y `drawRunning`;
 - Cómo integraste ambas fuentes de datos en el mismo frontend;
 - Qué pruebas hiciste para verificar que el control paramétrico funciona sin romper la sincronización de Strudel;
 - Qué problemas encontraste y cómo los solucionaste.
