@@ -2,3 +2,345 @@
 title: Unidad 6
 unitId: unit6
 ---
+import { Aside } from '@astrojs/starlight/components';
+
+## Introducción 📜
+
+En esta unidad vas a continuar el trabajo arquitectónico de las unidades 4 y 5,
+pero esta vez la fuente de datos ya no será un dispositivo físico conectado por
+serial. En lugar de eso, vas a integrar una segunda aplicación web que genera
+eventos musicales en tiempo real usando Strudel.
+
+El reto ya no consiste solamente en lograr que "dos cosas se comuniquen". El
+reto real es mantener una arquitectura desacoplada, clara y explicable, en la
+que cada capa conserve su responsabilidad: una aplicación genera eventos, el
+bridge los transporta, y el frontend los interpreta y los convierte en una
+respuesta visual sincronizada en el tiempo.
+
+## Rúbrica de evaluación de la unidad 📝
+
+:::note[Transparencia]
+Esta rúbrica se socializa antes de la sustentación. La sustentación se
+basa en lo presentado en la aplicación y lo documentado en la bitácora.
+:::
+
+### Requisito de salida (condición necesaria)
+
+:::caution[Para poder cerrar la evaluación y registrar la nota]
+La **bitácora de reflexión** debe estar diligenciada antes de terminar
+la sesión final y debe ser enseñada al profesor antes de abandonar el aula.
+La presentación de la bitácora de reflexión es un requisito indispensable
+para montar la nota final en la plataforma académica. Si no se cumple este
+requisito, la nota final de la unidad será 0.0.
+:::
+
+---
+
+### Rúbrica analítica
+
+:::tip[Evidencias evaluadas]
+
+1) Funcionamiento de la aplicación + documentación en bitácora.
+2) Sustentación a partir de la app y la bitácora de aplicación.
+
+:::
+
+| Criterio (peso) | Cumple plenamente (5.0) | Se cumple medianamente (4.0)| Problemas importantes (3.0)| Falta comprensión básica (2.0) | No hay evidencia (0.0)
+|---|---|---|---|---|---|
+| **1. Aplicación + bitácora (40%)** | La app se ejecuta sin fallos en el entorno acordado. La sincronización es consistente y la bitácora permite reconstruir el flujo completo del sistema. Todo es consistente con lo mostrado en la demo. | La app funciona y logra la comunicación básica entre Strudel y la visual. La bitácora permite verificar lo esencial, aunque hay **1–2 vacíos menores**. | La app funciona parcialmente, la sincronización es inestable o la arquitectura no está claramente documentada. La bitácora tiene **vacíos importantes**. | La app no corre o no demuestra lo requerido. La bitácora no permite verificar cómo se implementó la solución. | No se entregaron evidencias o no se puede acceder a ellas |
+|Evaluación||||||
+| **2. Sustentación (60%)** | Responde con precisión conectando: **(a) los eventos musicales que se generan**, **(b) cómo viajan por el sistema**, y **(c) cómo se convierten en imagen sincronizada**. Justifica decisiones y reconoce límites. | Responde correctamente pero con **imprecisiones menores** o con una justificación superficial de algunas decisiones. | Explica parcialmente qué sucede, pero le cuesta describir con claridad la arquitectura, el uso del tiempo o la separación de responsabilidades entre capas. | No logra explicar de forma coherente el flujo de datos o mezcla conceptos sin relación clara con lo implementado. | No se entregaron evidencias o no se puede acceder a ellas |
+|Evaluación||||||
+
+---
+
+:::tip[Cálculo de la nota]
+
+$$
+Nota = C_1*0.4  + C_2*0.6
+$$
+
+:::
+
+---
+
+## Seek: Investigación 💡
+
+### Actividad 01
+
+En esta actividad vamos a estudiar un caso de integración entre dos aplicaciones
+que viven en el navegador y cuyo repositorio es [este](https://github.com/juanferfranco/strudel-p5Visuals):
+
+1. Una app musical que genera eventos con Strudel.
+2. Una app visual que recibe esos eventos y los transforma en animación.
+
+La meta no es copiar un experimento existente, sino analizarlo para entender qué
+problema arquitectónico resuelve y cómo se relaciona con lo que ya has trabajado
+en las unidades 4 y 5.
+
+El experimento de referencia ya resuelve una parte importante del problema: la
+sincronización temporal. En ese caso de estudio, los eventos musicales no se
+ejecutan apenas llegan por WebSocket, sino cuando el reloj local alcanza el
+`timestamp` indicado por el mensaje.
+
+Esto introduce una idea nueva para el curso:
+
+- En las unidades 4 y 5 el reto principal era **parsear y validar** datos.
+- En esta unidad también debes **programar cuándo** ocurre la respuesta visual.
+
+:::caution[📤 Bitácora]
+Registra en tu bitácora:
+- ¿Cuál es la diferencia entre recibir un mensaje y ejecutarlo?
+- ¿Por qué un sistema audiovisual puede necesitar `timestamp` además de los datos del evento?
+- ¿Qué aspectos de la arquitectura de las unidades 4 y 5 permanecen intactos aunque ahora la fuente de datos ya no sea hardware?
+:::
+
+#### Paso 1: ¿Qué tipo de datos puede emitir Strudel?
+
+Para esta unidad vamos a usar Strudel como una aplicación generadora de eventos
+musicales. Un patrón como este:
+
+```js
+setcps(0.5)
+
+const pat = s("[bd*2 sd hh oh]").bank("tr909")
+
+$: stack(
+  pat.gain('0.05'),
+  pat.osc()
+)
+```
+
+puede producir mensajes con información como:
+
+- Qué sonido ocurrió;
+- Cuándo debería ocurrir;
+- Cuánto dura su ciclo rítmico;
+- Otros parámetros asociados al evento.
+
+En vez de pensar en Strudel como "un sintetizador", para esta unidad debes
+pensarlo como una **fuente de eventos**.
+
+:::caution[📤 Bitácora]
+Registra en tu bitácora:
+- Si Strudel fuera "el dispositivo" de esta unidad, ¿Cuál sería su protocolo?
+- ¿Qué variables mínimas necesitarías extraer para poder construir una visualización útil?
+:::
+
+#### Paso 2: Transporte vs sincronización
+
+Supón que el bridge recibe este mensaje:
+
+```js
+{
+  address: '/dirt/play',
+  args: [
+    'cps',   0.5,
+    'cycle', 15.25,
+    'delta', 0.5,
+    's',     'tr909sd',
+    'bank',  'tr909'
+  ],
+  timestamp: 1774966984435.2805
+}
+```
+
+Si la aplicación visual dispara la animación apenas llega el mensaje, el sistema
+queda amarrado a la latencia de red, al navegador y a la carga del computador.
+
+Si en cambio la aplicación:
+
+1. recibe el mensaje;
+2. lo guarda en una cola;
+3. espera a que `Date.now()` alcance su `timestamp`;
+4. recién ahí activa la respuesta visual;
+
+entonces la sincronización mejora y la arquitectura se vuelve más explícita.
+
+Esto es importante porque permite distinguir dos capas conceptuales:
+
+- **Transporte**: mover el mensaje de una app a la otra;
+- **Scheduling**: ejecutar el evento en el instante correcto.
+
+:::caution[📤 Bitácora]
+Registra en tu bitácora:
+- ¿Qué problema resuelve la cola de eventos?
+- ¿Por qué esta capa no pertenece al bridge sino al lado que interpreta el evento?
+:::
+
+#### Paso 3: Continuidad con las unidades 4 y 5
+
+Aunque ahora no hay puerto serial ni micro:bit, la lógica de diseño sigue siendo
+la misma:
+
+1. Existe una fuente externa de datos;
+2. Esos datos deben traducirse a una forma comprensible por el sistema;
+3. Hay una capa de transporte;
+4. Hay una capa de frontend que convierte eventos en estado y luego en imagen.
+
+En otras palabras:
+
+- En la unidad 4 cambió el formato ASCII.
+- En la unidad 5 cambió el protocolo binario y apareció el framing.
+- En esta unidad cambia la naturaleza misma del evento: ahora es un evento musical con tiempo programado.
+
+:::caution[📤 Bitácora]
+Registra en tu bitácora:
+- ¿Qué papel cumple el Adapter en U4 y U5?
+- ¿Qué pieza equivalente necesitas ahora para que los eventos de Strudel no entren "crudos" al sistema visual?
+:::
+
+---
+
+## Apply: Aplicación 🛠
+
+### Actividad 02
+
+Un equipo de diseño sonoro ha creado una aplicación en Strudel que genera música
+en el navegador. Tu tarea es integrar esa aplicación a un sistema visual ya
+existente, pero debes hacerlo sin romper la arquitectura desacoplada que vienes
+desarrollando desde las unidades anteriores.
+
+<Aside type="danger" title="">
+- Debes usar ESTRICTAMENTE la arquitectura del sistema de software que ya existe.
+- No debes convertir `bridgeServer.js` en un lugar de lógica visual o musical compleja.
+- No debes disparar la visualización directamente desde el callback del WebSocket.
+- Debes separar claramente: recepción del mensaje, normalización de datos, programación temporal y renderizado.
+</Aside>
+
+**La documentación funcional del sistema es esta:**
+
+- La aplicación de Strudel corre en el navegador.
+- Strudel envía eventos por WebSocket al puerto `8080`.
+- Cada evento contiene información musical y una marca temporal `timestamp`.
+- El bridge recibe estos mensajes y debe reenviarlos a la aplicación visual.
+- La aplicación visual debe responder de forma sincronizada con el tiempo indicado por el evento.
+
+**Ejemplo de mensaje de entrada al bridge:**
+
+```js
+{
+  address: '/dirt/play',
+  args: [
+    'cps',   0.5,
+    'cycle', 15.25,
+    'delta', 0.5,
+    's',     'tr909sd',
+    'bank',  'tr909'
+  ],
+  timestamp: 1774966984435.2805
+}
+```
+
+**Qué debes implementar:**
+
+1. Integrar una configuración de Strudel que emita eventos musicales por WebSocket hacia el puerto `8080`.
+
+2. Crear un nuevo Adapter para el `bridgeServer.js` para que:
+   - Reciba los eventos entrantes desde Strudel;
+   - Los normalice a un formato claro para el sistema;
+   - Los reenvíe al cliente visual sin decidir cómo se dibujan.
+
+3. Adaptar `bridgeClient.js` para que:
+   - Reciba los eventos reenviados;
+   - Dispare el evento correspondiente hacia la capa de frontend.
+
+4. Implementar en el frontend una lógica que:
+   - Reciba eventos musicales;
+   - Los almacene en una cola;
+   - Los active cuando llegue su `timestamp`;
+   - Traduzca esos eventos en una respuesta visual coherente.
+
+**Contrato mínimo sugerido para el evento normalizado:**
+
+```js
+{
+  type: "strudel",
+  timestamp: 1710000000000,
+  payload: {
+    eventType: "noteEvent",
+    s: "tr909bd",
+    delta: 0.25
+  }
+}
+```
+
+No es obligatorio usar exactamente este contrato, pero tu sistema debe tener un
+formato estable, explícito y fácil de explicar en la sustentación.
+
+**Requisito mínimo funcional**
+
+Tu sistema debe soportar al menos estos sonidos:
+
+- `bd`
+- `sd` o `cp`
+- `hh`
+
+y debe usar al menos estos parámetros:
+
+- tipo de sonido;
+- `timestamp`;
+- `delta` o alguna duración equivalente.
+
+**Exploración opcional**
+
+Si quieres llevar tu propuesta más lejos, puedes integrar:
+
+- Líneas de bajo;
+- Melodías;
+- Escalas;
+- Color por familia sonora;
+- Duración visual dependiente de `delta`;
+- Múltiples capas visuales simultáneas.
+
+**Pista de implementación**
+
+En las unidades 4 y 5 aprendiste que no conviene mezclar la lectura del protocolo
+con la lógica visual. Aquí ocurre lo mismo:
+
+- El bridge no debe decidir colores, formas o composiciones;
+- El frontend no debería interpretar mensajes WebSocket desordenados o ambiguos;
+- La capa de estado debe convertir el evento musical en variables visuales y luego
+  el render debe limitarse a dibujar.
+
+:::caution[📤 Bitácora]
+Documenta en tu bitácora:
+- Cómo configuraste Strudel para emitir eventos;
+- Qué estructura final de mensaje decidiste usar;
+- Cómo separaste recepción, cola temporal y renderizado;
+- Qué pruebas hiciste para verificar la sincronización;
+- Qué problemas encontraste y cómo los solucionaste.
+:::
+
+---
+
+## Reflect: Consolidación y metacognición 🤔
+
+### Actividad 03
+
+:::caution[📤 Bitácora]
+Responde en tu bitácora las siguientes preguntas:
+
+1. Realiza un diagrama detallado del flujo de datos de tu sistema. Debe incluir al menos:
+   - Strudel;
+   - WebSocket de salida;
+   - `bridgeServer.js`;
+   - `bridgeClient.js`;
+   - cola de eventos;
+   - FSM o capa de estado;
+   - render visual.
+
+2. Compara las unidades 4, 5 y 6 en una tabla. Compara al menos:
+   - Fuente de datos;
+   - Formato del mensaje;
+   - Problema técnico principal;
+   - Mecanismo de validación o control;
+   - Lugar donde ocurre la traducción del dato;
+   - Papel del tiempo o sincronización.
+
+3. Explica por qué esta unidad sigue perteneciendo a la misma arquitectura del curso, aunque la fuente de datos ya no sea hardware físico.
+
+4. Explica qué decisiones tomaste para traducir eventos musicales en visualidad. Justifica por qué tu mapeo visual tiene sentido.
+
+5. Si tuvieras que integrar una tercera aplicación en el futuro, ¿Qué partes de tu arquitectura actual conservarías y cuáles cambiarías?
+:::
