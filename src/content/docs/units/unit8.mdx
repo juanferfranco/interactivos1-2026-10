@@ -2,3 +2,310 @@
 title: Unidad 8
 unitId: unit8
 ---
+import { Aside } from '@astrojs/starlight/components';
+
+## Introducción 📜
+
+En esta unidad vas a cerrar el curso con una obra final en vivo. La pieza debe
+integrar las tres fuentes de datos que has trabajado en las últimas unidades:
+
+- micro:bit como fuente de interacción física;
+- Strudel como fuente de eventos musicales temporizados;
+- Open Stage Control como fuente de control paramétrico persistente.
+
+La meta de esta unidad no es simplemente "juntar todo" ni producir una demo
+vistosa sin estructura. La meta es demostrar que puedes construir, sostener y
+explicar un sistema interactivo complejo manteniendo estrictamente la
+arquitectura del curso:
+
+`Adapter -> bridgeServer -> bridgeClient -> FSMTask -> updateLogic -> drawRunning`
+
+La entrega final del curso será una **performance audiovisual en vivo** de entre
+**2 y 5 minutos**, de manera individual o en parejas. Sin embargo, antes de la
+sesión final todo el sistema, la bitácora y la sustentación técnica deben haber
+quedado resueltos.
+
+## Rúbrica de evaluación de la unidad 📝
+
+:::note[Transparencia]
+Esta rúbrica se socializa antes de la sustentación. La sustentación se
+basa en lo presentado en la aplicación, lo documentado en la bitácora y la
+performance final en vivo.
+:::
+
+### Requisito de salida (condición necesaria)
+
+:::caution[Para poder cerrar la evaluación y registrar la nota]
+La **bitácora de reflexión** debe estar completamente diligenciada antes de la
+sesión 3 de revisión técnica y sustentación. La presentación de la bitácora es
+un requisito indispensable para poder pasar a la sesión final de performance.
+Si no se cumple este requisito, la nota final de la unidad será 0.0.
+:::
+
+---
+
+### Rúbrica analítica
+
+:::tip[Evidencias evaluadas]
+
+1) Sistema técnico + bitácora + sustentación.
+2) Performance final en vivo.
+
+:::
+
+| Criterio (peso) | Cumple plenamente (5.0) | Se cumple medianamente (4.0)| Problemas importantes (3.0)| Falta comprensión básica (2.0) | No hay evidencia (0.0)
+|---|---|---|---|---|---|
+| **1. Sistema técnico + bitácora + sustentación (60%)** | El sistema integra correctamente micro:bit, Strudel y Open Stage Control respetando la arquitectura del curso. La bitácora permite reconstruir la solución y la sustentación conecta con claridad arquitectura, flujo de datos y decisiones de diseño. | El sistema funciona y las tres fuentes están integradas de forma verificable. Hay **1–2 vacíos menores** en la bitácora o en la explicación técnica, pero el proyecto sigue siendo consistente. | La integración es parcial, una o más fuentes no cumplen un rol claro o la arquitectura está débilmente sostenida. La bitácora tiene **vacíos importantes** o la sustentación no logra explicar con claridad el sistema. | El sistema no demuestra una integración real de las tres fuentes o rompe la arquitectura de manera significativa. La bitácora y la sustentación no permiten verificar comprensión básica del proyecto. | No se entregaron evidencias o no se puede acceder a ellas |
+|Evaluación||||||
+| **2. Performance en vivo (40%)** | La performance se ejecuta en vivo dentro del tiempo establecido y evidencia de forma clara la integración real de micro:bit, Strudel y Open Stage Control en una misma obra. Los elementos se perciben articulados y el sistema se comporta de forma estable durante la ejecución. | La performance se realiza en vivo y evidencia integración funcional de las fuentes, aunque con **imprecisiones menores**, momentos débiles de articulación o pequeñas inestabilidades. | La performance se ejecuta parcialmente o la integración de las fuentes no se percibe con claridad. Hay problemas relevantes de estabilidad, continuidad o coherencia performática. | La performance no logra ejecutarse adecuadamente o no permite reconocer una integración real de las tres fuentes dentro de una misma obra. | No se realizó la performance o no hay evidencia verificable |
+|Evaluación||||||
+
+---
+
+:::tip[Cálculo de la nota]
+
+$$
+Nota = C_1*0.6  + C_2*0.4
+$$
+
+:::
+
+---
+
+## Organización de la unidad 🗓️
+
+Esta unidad se desarrollará en **4 sesiones de clase**:
+
+1. **Sesión 1:** Iteración ingenieril.
+2. **Sesión 2:** Iteración estética y ensayo.
+3. **Sesión 3:** Revisión de bitácora, revisión técnica y sustentación.
+4. **Sesión 4:** Performance final en vivo.
+
+La sesión 4 no es una sesión para terminar de documentar, ni para explicar de
+nuevo la arquitectura, ni para resolver de cero problemas técnicos de último
+momento. La sesión 4 está reservada para tocar la obra.
+
+---
+
+## Actividad 01: Iteración ingenieril 🛠
+
+En esta primera iteración debes construir la base técnica completa del sistema.
+La meta de esta etapa no es hacer una obra "bonita", sino verificar que la
+arquitectura está resuelta y que las tres fuentes de entrada conviven
+correctamente.
+
+**Objetivo**
+
+Lograr una integración funcional mínima de:
+
+- micro:bit;
+- Strudel;
+- Open Stage Control.
+
+<Aside type="danger" title="">
+- Debes usar ESTRICTAMENTE la arquitectura del curso.
+- Cada fuente debe entrar por su propio **Adapter**.
+- No debes mover la lógica de dominio a `bridgeServer.js`.
+- No debes conectar mensajes o controles directamente a funciones de dibujo.
+- La lógica del sistema debe pasar por `bridgeClient.js`, `FSMTask`, `updateLogic` y `drawRunning`.
+</Aside>
+
+**Lo que debe quedar funcionando al cerrar esta iteración**
+
+- Micro:bit modifica al menos un comportamiento del sistema;
+- Strudel activa eventos temporizados;
+- Open Stage Control modifica al menos un parámetro persistente;
+- Las tres fuentes llegan al frontend respetando la arquitectura.
+
+#### Arquitectura del backend: guía de integración
+
+Debes construir el sistema usando adapters independientes:
+
+- Un Adapter para micro:bit;
+- Un Adapter para Strudel;
+- Un Adapter para Open Stage Control.
+
+Cada Adapter debe:
+
+- Recibir los datos de su fuente;
+- Normalizarlos a un contrato claro;
+- Entregarlos a `bridgeServer.js`.
+
+`bridgeServer.js` debe encargarse del transporte y distribución de mensajes,
+pero no debe convertirse en el lugar donde se resuelve la lógica del proyecto.
+
+#### Arquitectura del frontend: guía de integración
+
+El frontend debe respetar el mismo flujo que vienes trabajando:
+
+1. `bridgeClient.js`
+   - Recibe los mensajes reenviados por `bridgeServer.js`;
+   - Inspecciona `msg.type`;
+   - Dispara el evento correspondiente hacia la FSM.
+
+2. `FSMTask`
+   - Recibe eventos ya normalizados;
+   - Coordina la organización del sistema;
+   - No debe parsear mensajes crudos de red.
+
+3. `updateLogic`
+   - Actualiza la cola temporal de eventos;
+   - Actualiza variables persistentes de control;
+   - Traduce los mensajes a estado visual y comportamental.
+
+4. `drawRunning`
+   - No debe parsear mensajes;
+   - No debe decidir cómo interpretar `msg.type`;
+   - Solo debe dibujar usando el estado ya calculado.
+
+En otras palabras: `bridgeClient.js` recibe, `FSMTask` organiza,
+`updateLogic` actualiza estado y `drawRunning` dibuja.
+
+:::caution[📤 Bitácora]
+Antes de cerrar esta iteración, registra en tu bitácora:
+- Un diagrama inicial de la arquitectura;
+- Los adapters que vas a usar;
+- El contrato de mensajes de cada fuente;
+- Pruebas técnicas básicas de integración;
+- Los errores encontrados y cómo los solucionaste.
+:::
+
+---
+
+## Actividad 02: Iteración estética 🎛️
+
+Con la base técnica ya validada, debes transformar el sistema en una propuesta
+performática coherente.
+
+Aquí el problema ya no es solo técnico. Ahora debes decidir qué tipo de obra
+vas a tocar, cómo se relacionan imagen, sonido y gesto, y qué rol cumple cada
+fuente dentro de la performance.
+
+**Objetivo**
+
+Convertir la integración técnica en una obra performática con intención clara.
+
+**Condiciones**
+
+- Cada fuente debe tener un rol distinto y justificable.
+- No se vale usar una fuente solo como adorno para "cumplir".
+- Debe existir al menos una relación significativa entre dos fuentes.
+- Debe existir al menos una decisión del sistema que dependa de las tres fuentes combinadas.
+- La propuesta debe poder ejecutarse en vivo de forma razonablemente estable.
+
+**Requisito performático**
+
+La obra final debe estar pensada como una sesión de **live coding audiovisual**
+que será tocada en vivo entre **2 y 5 minutos**.
+
+Eso significa que la entrega final de esta unidad no es una instalación, ni una
+demo autónoma, ni una reproducción automática. La entrega final es una ejecución
+en vivo en la que debe ser perceptible la manipulación del sistema en tiempo real.
+
+Durante la performance debe evidenciarse el uso activo de:
+
+- Strudel como parte del live coding musical;
+- Open Stage Control como interfaz de control en tiempo real;
+- micro:bit como fuente de interacción física dentro de la ejecución.
+
+Si trabajas en pareja, debes dejar claro:
+
+- Cómo se distribuyen los roles técnicos o performáticos;
+- Cómo participa cada integrante en la ejecución de la pieza.
+
+:::caution[📤 Bitácora]
+Antes de cerrar esta iteración, registra en tu bitácora:
+- El concepto de la obra;
+- El rol de micro:bit, Strudel y Open Stage Control;
+- Las decisiones visuales, musicales y performáticas;
+- Los cambios realizados entre la iteración ingenieril y la iteración estética;
+- Evidencias de ensayo.
+:::
+
+---
+
+## Actividad 03: Revisión técnica, bitácora y sustentación 🤔
+
+Esta actividad ocurre en la **sesión 3**.
+
+Antes de pasar a la sesión final de performance, debes tener completamente
+cerrado el proceso técnico y documental del proyecto.
+
+En esta sesión revisaremos:
+
+- La bitácora;
+- La arquitectura técnica del sistema;
+- La integración real de las tres fuentes;
+- La capacidad de sustentar decisiones de implementación y diseño.
+
+**Qué debes poder explicar en la sustentación**
+
+- Cómo entra cada fuente al sistema;
+- Qué hace cada Adapter;
+- Qué papel cumple `bridgeServer.js`;
+- Cómo se conectan `bridgeClient.js`, `FSMTask`, `updateLogic` y `drawRunning`;
+- Qué rol cumple cada fuente dentro de la obra;
+- Por qué tu sistema conserva la arquitectura del curso.
+
+**Condición para pasar a la sesión final**
+
+Tu bitácora debe estar completa y debe permitir reconstruir:
+
+- La arquitectura del proyecto;
+- Las decisiones técnicas;
+- Las decisiones estéticas;
+- Las pruebas realizadas;
+- La lógica de la performance.
+
+:::caution[📤 Bitácora]
+Antes de terminar la sesión 3, tu bitácora debe incluir al menos:
+
+1. Un diagrama completo del flujo de datos del sistema.
+2. Una tabla con el rol de cada fuente:
+   - `micro:bit`: qué controla, cómo entra al sistema y por qué;
+   - `Strudel`: qué controla, cómo entra al sistema y por qué;
+   - `Open Stage Control`: qué controla, cómo entra al sistema y por qué.
+3. La explicación del recorrido:
+   `Adapter -> bridgeServer -> bridgeClient -> FSMTask -> updateLogic -> drawRunning`
+4. La justificación de la propuesta estética y performática.
+5. Evidencias de pruebas y ensayos.
+:::
+
+---
+
+## Actividad 04: Performance final en vivo 🎚️
+
+Esta actividad ocurre en la **sesión 4** y constituye la entrega final del
+curso.
+
+**Formato**
+
+- Individual o en parejas;
+- Duración mínima: **2 minutos**;
+- Duración máxima: **5 minutos**.
+
+**Propósito**
+
+Presentar en vivo una obra audiovisual en la que se evidencie la integración
+real de:
+
+- micro:bit;
+- Strudel;
+- Open Stage Control.
+
+La performance no debe mostrar simplemente que las tres tecnologías están
+"prendidas" o abiertas al mismo tiempo. Debe ser perceptible que forman parte
+activa del comportamiento del sistema durante la ejecución de live coding.
+
+**Importante**
+
+La sesión final está reservada para tocar la obra. La bitácora, la revisión
+técnica y la sustentación deben haber quedado resueltas en la sesión anterior.
+
+:::caution[📤 Cierre]
+Tu performance final debe demostrar:
+- Integración real de las tres fuentes;
+- Funcionamiento observable de la arquitectura;
+- Estabilidad general durante la ejecución;
+- Coherencia entre gesto, control, sonido y visualidad.
+:::
